@@ -46,6 +46,12 @@ test('no corner cutting between two walls', () => {
   expect(at(f, m, 2, 2)).toBe(Infinity);
 });
 
+test('every floor cell of the game map is reached from the centre', () => {
+  const m = parseMap();
+  const f = buildFlowField(m, [{ tx: 17, ty: 16 }]);
+  for (let i = 0; i < f.length; i++) if (!m.solid[i]) expect(f[i]).toBeLessThan(Infinity);
+});
+
 test('nextStep moves to the lowest neighbour', () => {
   const f = buildFlowField(open, [{ tx: 1, ty: 1 }]);
   expect(nextStep(f, open, 5, 3)).toEqual({ tx: 4, ty: 2 });

@@ -323,7 +323,7 @@ anfitrión puede cambiar y los rechazos dan mensajes claros.
 
 ### Tests de la User Story 3
 
-- [ ] T036 [P] [US3] Escribir en `shared/test/rules.test.ts` tests que fallen:
+- [X] T036 [P] [US3] Escribir en `shared/test/rules.test.ts` tests que fallen:
   - **`registerKill`**:
     - suma 1 al combo;
     - `score += points × (1+floor(combo/5))`;
@@ -338,10 +338,10 @@ anfitrión puede cambiar y los rechazos dan mensajes claros.
 
 ### Implementación de la User Story 3
 
-- [ ] T037 [US3] Crear `shared/src/rules.ts` con `registerKill(player, points)`,
+- [X] T037 [US3] Crear `shared/src/rules.ts` con `registerKill(player, points)`,
   `tickCombo(player, dt)` y `waveComposition(n, players)`, según research R12 y data-model.md.
   Exportarlas desde `shared/src/index.ts` y hacer pasar T036.
-- [ ] T038 [US3] Máquina de oleadas de data-model.md en `server/src/GameRoom.ts`:
+- [X] T038 [US3] Máquina de oleadas de data-model.md en `server/src/GameRoom.ts`:
   - **`start`**: pasa a `intermission` con `waveTimer=5`.
   - **`intermission → playing`**: `toSpawn` sale de `waveComposition`. El reparto de diablos se
     guarda en una cola del servidor.
@@ -350,13 +350,13 @@ anfitrión puede cambiar y los rechazos dan mensajes claros.
     - Los muertos reaparecen en una `P` libre con vida completa, conservando armas, munición y
       puntos (FR-030).
   - **gameover**: tiene prioridad sobre el fin de oleada si mueren todos.
-- [ ] T039 [US3] Diablos en `server/src/GameRoom.ts`:
+- [X] T039 [US3] Diablos en `server/src/GameRoom.ts`:
   - aparecen según la cola;
   - lanzan una bola de fuego (`Projectile` kind 1) cuando `fireCooldown<=0`, el objetivo está a
     menos de `fireRange` y hay línea de visión (`raycast` solo contra paredes);
   - los proyectiles avanzan cada tick y se eliminan al entrar en casilla sólida, al agotar el
     alcance o al tocar a un jugador, al que aplican `fireDamage`.
-- [ ] T040 [US3] Muertes y cajas en `server/src/GameRoom.ts`:
+- [X] T040 [US3] Muertes y cajas en `server/src/GameRoom.ts`:
   - cada muerte de enemigo llama a `registerKill(killer, ENEMIES[kind].points)`;
   - por cada índice desbloqueado, `broadcast('unlock',{id,w})`;
   - `tickCombo` se aplica a cada jugador en cada tick;
@@ -366,7 +366,7 @@ anfitrión puede cambiar y los rechazos dan mensajes claros.
     - la de munición suma `ceil(WEAPONS[i].ammo*ammoRefill)` a cada arma desbloqueada salvo la
       pistola;
     - la de vida suma `heal`, con tope 100.
-- [ ] T041 [US3] Armas en `server/src/GameRoom.ts`:
+- [X] T041 [US3] Armas en `server/src/GameRoom.ts`:
   - **Mensaje `weapon`**: acepta `{index}` o `{step}` e ignora las armas bloqueadas ("Se permite
     seleccionar armas con munición 0"). `step` salta las bloqueadas.
   - **Disparo según `WEAPONS[weapon].kind`**:
@@ -378,20 +378,20 @@ anfitrión puede cambiar y los rechazos dan mensajes claros.
   - **Munición**: cada disparo la consume, y con 0 no se dispara.
   - **Mensaje `debugUnlock`**: solo si `process.env.NODE_ENV!=='production'`. Desbloquea todas las
     armas con su dotación.
-- [ ] T042 [P] [US3] En `client/src/art.ts`, añadir las texturas `d_d0..d7` (diablo rojo con
+- [X] T042 [P] [US3] En `client/src/art.ts`, añadir las texturas `d_d0..d7` (diablo rojo con
   cabeza mayor), `fireball`, `grenade`, `crate_ammo` y `crate_hp`.
-- [ ] T043 [US3] En `client/src/GameScene.ts`:
+- [X] T043 [US3] En `client/src/GameScene.ts`:
   - pintar diablos, proyectiles y cajas, sincronizados igual que los enemigos;
   - con `boom`, un círculo que se expande durante 300 ms;
   - Q/E envían `{step:-1|1}` y las teclas 1-7 envían `{index}`;
   - si el jugador local está muerto, la cámara sigue a un compañero vivo (espectador).
-- [ ] T044 [US3] En `client/src/main.ts`, `client/src/ui.ts` y `client/index.html`:
+- [X] T044 [US3] En `client/src/main.ts`, `client/src/ui.ts` y `client/index.html`:
   - el `#hud` añade nombre del arma, munición (∞ si es -2), combo `×multiplicador` con una barra
     de `comboTime`, y la oleada;
   - aparece el aviso "Oleada N" cuando `phase` pasa a `intermission`;
   - el evento `unlock` con mi id muestra el toast "¡Nueva arma: X!";
   - con `?debug=1`, se envía `debugUnlock` al empezar la partida.
-- [ ] T045 [US3] Validar los 5 pasos de quickstart "Historia 3", ejecutar `npm test` y hacer
+- [X] T045 [US3] Validar los 5 pasos de quickstart "Historia 3", ejecutar `npm test` y hacer
   commit `feat: waves, devils, combo unlocks and crates (US3)`.
 
 **Checkpoint**: progresión completa con armas de disparo y granadas.

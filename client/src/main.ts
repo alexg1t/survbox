@@ -1,4 +1,5 @@
 import { Client, type Room } from '@colyseus/sdk';
+import { COMBO, INFINITE, WEAPONS, multiplierOf } from '@game/shared';
 import type { GameState } from '@game/server/src/state.ts';
 import * as Phaser from 'phaser';
 import { hex, PLAYER_COLORS } from './art.ts';
@@ -15,6 +16,7 @@ const game = new Phaser.Game({
 });
 game.scene.add('game', GameScene);
 
+const DEBUG = new URLSearchParams(location.search).has('debug');
 let room: Room<any, GameState> | null = null;
 let phase = '';
 
@@ -29,7 +31,10 @@ async function enter(join: () => Promise<Room<any, GameState>>) {
     return;
   }
   phase = '';
+  const r = room;
   room.onMessage('shot', (m) => scene().sys.isActive() && scene().shot(m));
+  room.onMessage('boom', (m) => scene().sys.isActive() && scene().boom(m));
+  room.onMessage('unlock', (m: { id: string; w: number }) => m.id === r.sessionId && toast(`¡Nueva arma: ${WEAPONS[m.w].name}!`));
   room.onStateChange(onState);
   room.onLeave(() => {
     game.scene.stop('game');
@@ -50,6 +55,10 @@ function onState(state: GameState) {
     } else {
       if (!game.scene.isActive('game')) game.scene.start('game', { room });
       show('hud');
+      if (phase === 'intermission') {
+        toast(`Oleada ${state.wave}`, 2500);
+        if (DEBUG) room.send('debugUnlock');
+      }
     }
   }
   const isHost = state.hostId === room.sessionId;
@@ -63,7 +72,13 @@ function onState(state: GameState) {
     $('#lobby-wait').hidden = isHost;
   } else if (phase !== 'gameover') {
     const me = state.players.get(room.sessionId);
-    $('#hud-hp').textContent = `Vida ${me?.hp ?? 0}`;
+    if (!me) return;
+    const ammo = me.ammo[me.weapon];
+    $('#hud-hp').textContent = me.alive ? `Vida ${me.hp}` : 'Eliminado: vuelves en la siguiente oleada';
+    $('#hud-weapon').textContent = `${WEAPONS[me.weapon].name}  ${ammo === INFINITE ? '∞' : ammo}`;
+    $('#hud-combo').textContent = `Combo ${me.combo}  ×${multiplierOf(me.combo)}  ·  ${me.score} pts`;
+    $('#hud-combo-bar').style.width = `${(me.comboTime / COMBO.window) * 100}%`;
+    $('#hud-wave').textContent = `Oleada ${state.wave}`;
     $('#hud-code').textContent = `Sala ${room.roomId}`;
   }
 }

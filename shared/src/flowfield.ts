@@ -57,7 +57,10 @@ export function buildFlowField(
       if (!canStep(map, tx, ty, dx, dy)) continue;
       const n = i + dy * map.w + dx;
       const nd = d + cost + extraCost(tx + dx, ty + dy);
-      if (nd < dist[n]) { dist[n] = nd; push(nd, n); }
+      if (nd < dist[n]) {
+        dist[n] = nd;
+        push(dist[n], n); // push the float32-rounded value, or the `d > dist[i]` check drops the node
+      }
     }
   }
   return dist;

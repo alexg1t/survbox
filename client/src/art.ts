@@ -63,9 +63,27 @@ export function makeTextures(scene: Phaser.Scene): void {
   const looks: [string, Look][] = [
     ...PLAYER_COLORS.map((c, i): [string, Look] => [`p${i}`, { body: c, skin: 0xf0c9a0 }]),
     ['z', { body: 0x5a6b3a, skin: 0x8fbf5a }],
+    ['d', { body: 0x7a1a1a, skin: 0xd03030, horns: true }],
   ];
   for (const [prefix, look] of looks) {
     for (let dir = 0; dir < 8; dir++) make(`${prefix}_d${dir}`, CHAR_W, CHAR_H, () => character(g, look, dir));
   }
+
+  make('fireball', 14, 14, () => {
+    g.fillStyle(0xff5a1a).fillCircle(7, 7, 7);
+    g.fillStyle(0xffd23a).fillCircle(7, 7, 4);
+  });
+  make('grenade', 10, 10, () => {
+    g.fillStyle(0x2f4a2a).fillCircle(5, 5, 5);
+    g.fillStyle(0x9a9a9a).fillRect(4, 0, 3, 3);
+  });
+  make('crate_ammo', 20, 20, () => {
+    box(g, 0, 0, 20, 6, 14, 0x8a7a3a);
+    g.fillStyle(0xe0c23d).fillRect(3, 11, 14, 3);
+  });
+  make('crate_hp', 20, 20, () => {
+    box(g, 0, 0, 20, 6, 14, 0xe8e8e8);
+    g.fillStyle(0xd03030).fillRect(8, 8, 4, 10).fillRect(5, 11, 10, 4);
+  });
   g.destroy();
 }

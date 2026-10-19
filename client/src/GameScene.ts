@@ -1,8 +1,8 @@
 import type { Room } from '@colyseus/sdk';
-import { MINE, PLAYER, TILE, moveCircle, parseMap } from '@game/shared';
+import { DEVIL, GRENADE, HEALTH_CRATE, MINE, PLAYER, TILE, moveCircle, parseMap } from '@game/shared';
 import type { GameState } from '@game/server/src/state.ts';
 import * as Phaser from 'phaser';
-import { CHAR_H, CHAR_W, WALL_HEIGHT, makeTextures } from './art.ts';
+import { CHAR_H, WALL_HEIGHT, makeTextures } from './art.ts';
 import { $ } from './ui.ts';
 
 const map = parseMap();
@@ -40,13 +40,21 @@ export class GameScene extends Phaser.Scene {
     }
     this.cameras.main.setBounds(0, -WALL_HEIGHT, map.w * TILE, map.h * TILE + WALL_HEIGHT).setZoom(1.6);
     this.keys = this.input.keyboard!.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT,SPACE') as Record<string, Phaser.Input.Keyboard.Key>;
-    this.events.once('shutdown', () => this.input.keyboard?.clearCaptures());
+    this.input.keyboard!.on('keydown', (e: KeyboardEvent) => {
+      if (e.code === 'KeyQ') this.room.send('weapon', { step: -1 });
+      else if (e.code === 'KeyE') this.room.send('weapon', { step: 1 });
+      else if (/^Digit[1-7]$/.test(e.code)) this.room.send('weapon', { index: Number(e.code[5]) - 1 });
+    });
+    this.events.once('shutdown', () => {
+      this.input.keyboard?.clearCaptures();
+      this.input.keyboard?.removeAllListeners('keydown');
+    });
 
     const self = this.room.state.players.get(this.room.sessionId);
     if (self) Object.assign(this.me, { x: self.x, y: self.y, dir: self.dir });
 
     const hint = $('#hud-hint');
-    hint.textContent = 'Flechas/WASD: mover · Espacio: disparar';
+    hint.textContent = 'Flechas/WASD: mover · Espacio: disparar · Q/E o 1-7: arma';
     this.time.delayedCall(10_000, () => (hint.textContent = ''));
   }
 
@@ -54,6 +62,11 @@ export class GameScene extends Phaser.Scene {
     const line = this.add.graphics().setDepth(1e6);
     line.lineStyle(2, 0xfff2a8, 0.9).lineBetween(m.x1, m.y1 - 14, m.x2, m.y2 - 14);
     this.time.delayedCall(100, () => line.destroy());
+  }
+
+  boom(m: { x: number; y: number; r: number }) {
+    const c = this.add.circle(m.x, m.y, m.r, 0xffa040, 0.6).setDepth(1e6).setScale(0.3);
+    this.tweens.add({ targets: c, scale: 1, alpha: 0, duration: 300, onComplete: () => c.destroy() });
   }
 
   private blocked = (tx: number, ty: number) => {
@@ -101,7 +114,13 @@ export class GameScene extends Phaser.Scene {
       label.setPosition(s.x, s.y - CHAR_H + 4).setVisible(p.alive);
     }
     for (const [id, e] of state.enemies) {
-      this.sync(`e:${id}`, seen, e.x, e.y, true).setTexture(`z_d${e.dir}`);
+      this.sync(`e:${id}`, seen, e.x, e.y, true).setTexture(`${e.kind === DEVIL ? 'd' : 'z'}_d${e.dir}`);
+    }
+    for (const [id, pr] of state.projectiles) {
+      this.sync(`j:${id}`, seen, pr.x, pr.y, true, 0.5).setTexture(pr.kind === GRENADE ? 'grenade' : 'fireball');
+    }
+    for (const [id, c] of state.crates) {
+      this.sync(`c:${id}`, seen, c.x, c.y, false, 0.7).setTexture(c.kind === HEALTH_CRATE ? 'crate_hp' : 'crate_ammo');
     }
     for (const [key, s] of this.sprites) {
       if (!seen.has(key)) {
@@ -112,15 +131,18 @@ export class GameScene extends Phaser.Scene {
       }
     }
 
-    this.cameras.main.centerOn(this.me.x, this.me.y);
+    // Dead players spectate the first living teammate.
+    const watched = self?.alive ? null : [...state.players].find(([, p]) => p.alive)?.[0];
+    const focus = watched ? this.sprites.get(`p:${watched}`) : null;
+    this.cameras.main.centerOn(focus?.x ?? this.me.x, focus?.y ?? this.me.y);
   }
 
   // Creates or moves the sprite for one synced entity; depth sorts by feet y.
-  private sync(key: string, seen: Set<string>, x: number, y: number, smooth: boolean): Img {
+  private sync(key: string, seen: Set<string>, x: number, y: number, smooth: boolean, originY = (CHAR_H - 6) / CHAR_H): Img {
     seen.add(key);
     let s = this.sprites.get(key);
     if (!s) {
-      s = this.add.image(x, y, '__DEFAULT').setOrigin(0.5, (CHAR_H - 6) / CHAR_H).setSize(CHAR_W, CHAR_H);
+      s = this.add.image(x, y, '__DEFAULT').setOrigin(0.5, originY);
       this.sprites.set(key, s);
     } else if (smooth) {
       s.x += (x - s.x) * SMOOTH;

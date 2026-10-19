@@ -66,7 +66,7 @@ export const WEAPONS: WeaponDef[] = [
   { name: 'Mina', kind: 'placeable', damage: 90, rate: 3, range: 0, pellets: 0, spread: 0, radius: 70, ammo: 8, unlockMultiplier: 7, place: MINE },
 ];
 
-export const STARTING_AMMO = WEAPONS.map((w) => (w.ammo === INFINITE ? INFINITE : LOCKED));
+export const STARTING_AMMO: number[] = WEAPONS.map((w) => (w.ammo === INFINITE ? INFINITE : LOCKED));
 
 export const GRENADE_FUSE = 1.2;
 export const GRENADE = 0;
