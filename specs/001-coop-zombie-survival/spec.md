@@ -8,12 +8,28 @@
 
 **Input**: User description: "Juego web multijugador co-op inspirado en las mecánicas de Boxhead (shooter de supervivencia contra hordas de zombis, vista cenital pseudo-isométrica, personajes con forma de caja). Salas privadas de 1 a 4 jugadores con código de 5 letras o enlace; quinto jugador recibe 'sala llena'. Mapa de habitaciones, oleadas de zombis y diablos, controles de teclado estilo original, combo que desbloquea armas (pistola, uzi, escopeta, granadas, barriles, barricadas, minas), cajas de munición y vida, HUD, fin de partida con puntuación y reinicio. Fuera de alcance: PvP, lista pública de salas, varios mapas, cuentas, despliegue en internet, sonido."
 
+## Clarifications
+
+### Session 2026-10-18
+
+- Q: ¿Qué pasa cuando un jugador muere y aún quedan compañeros vivos? → A: Queda como espectador
+  y reaparece al empezar la siguiente oleada, con vida completa y conservando armas, munición y
+  puntos.
+- Q: ¿El combo y los desbloqueos de armas son de cada jugador o compartidos por todo el equipo?
+  → A: Por jugador. Cada uno tiene su combo, su multiplicador y sus desbloqueos.
+- Q: ¿Cómo entra en juego un jugador que se une a la sala en mitad de una oleada? → A: No puede.
+  Solo se entra en la sala de espera, antes de empezar. Con la partida en curso, la sala rechaza
+  la entrada con "Partida en curso".
+- Q: En la sala de espera, ¿quién puede pulsar "Empezar" y "Volver a la sala"? → A: Solo el
+  anfitrión (el creador). Si sale, el anfitrión pasa al jugador que lleva más tiempo en la sala.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Crear sala y sobrevivir en solitario (Priority: P1)
 
-Un jugador abre el juego en el navegador y pulsa "Crear sala". Aparece en un mapa de
-habitaciones con paredes, pasillos y puertas, armado con una pistola de munición infinita. Se
+Un jugador abre el juego en el navegador y pulsa "Crear sala". Entra como anfitrión en la sala
+de espera y pulsa "Empezar". Aparece en un mapa de habitaciones con paredes, pasillos y puertas,
+armado con una pistola de munición infinita. Se
 mueve en 8 direcciones con flechas o WASD y dispara con espacio en la dirección en la que mira.
 Los zombis aparecen en puntos fijos del mapa, le persiguen esquivando paredes y le quitan vida al
 tocarle. Si su vida llega a 0, la partida termina.
@@ -26,27 +42,30 @@ con la pistola y morir.
 
 **Acceptance Scenarios**:
 
-1. **Given** la pantalla de inicio, **When** el jugador pulsa "Crear sala", **Then** entra en la
-   partida en menos de 5 s y ve su personaje, el mapa y el código de sala.
-2. **Given** el jugador en partida, **When** mantiene dos teclas de dirección a la vez
+1. **Given** la pantalla de inicio, **When** el jugador pulsa "Crear sala", **Then** entra como
+   anfitrión en la sala de espera en menos de 5 s y ve el código de sala y el botón "Empezar".
+2. **Given** el anfitrión en la sala de espera, **When** pulsa "Empezar", **Then** la partida
+   empieza y ve su personaje en el mapa.
+3. **Given** el jugador en partida, **When** mantiene dos teclas de dirección a la vez
    (p. ej. arriba+derecha), **Then** se mueve en diagonal y el personaje mira hacia esa diagonal.
-3. **Given** el jugador quieto mirando a un zombi, **When** pulsa espacio, **Then** la bala sale
+4. **Given** el jugador quieto mirando a un zombi, **When** pulsa espacio, **Then** la bala sale
    en la dirección en la que mira, impacta al zombi y le quita vida. Tras suficientes impactos, el
    zombi muere y desaparece.
-4. **Given** una pared entre el jugador y un zombi, **When** el zombi persigue al jugador,
+5. **Given** una pared entre el jugador y un zombi, **When** el zombi persigue al jugador,
    **Then** rodea la pared por pasillos y puertas, sin atravesarla.
-5. **Given** un zombi tocando al jugador, **When** pasa el tiempo, **Then** el jugador pierde vida
+6. **Given** un zombi tocando al jugador, **When** pasa el tiempo, **Then** el jugador pierde vida
    a intervalos regulares, y su vida visible baja.
-6. **Given** el jugador con vida 0 y sin compañeros, **When** muere, **Then** la partida termina.
+7. **Given** el jugador con vida 0 y sin compañeros, **When** muere, **Then** la partida termina.
 
 ---
 
 ### User Story 2 - Jugar con amigos por código o enlace (Priority: P2)
 
-El creador de la sala ve un código de 5 letras y un botón "Copiar enlace". Otro jugador escribe el
-código en la pantalla de inicio o abre el enlace, y entra en la misma partida. Hasta 4 jugadores
-comparten mapa y enemigos, y cada uno ve a los demás moverse y disparar en tiempo real. Cada
-jugador tiene un color distinto y su nombre sobre la cabeza.
+En la sala de espera, el anfitrión ve un código de 5 letras y un botón "Copiar enlace". Otro
+jugador escribe el código en la pantalla de inicio o abre el enlace, y entra en la misma sala de
+espera. Todos ven la lista de jugadores, y el anfitrión pulsa "Empezar" cuando están todos. Hasta
+4 jugadores comparten mapa y enemigos, y cada uno ve a los demás moverse y disparar en tiempo
+real. Cada jugador tiene un color distinto y su nombre sobre la cabeza.
 
 **Why this priority**: el multijugador co-op es el objetivo principal del proyecto. Se apoya en
 el bucle de la historia 1.
@@ -57,8 +76,9 @@ movimientos.
 
 **Acceptance Scenarios**:
 
-1. **Given** una sala con 1 jugador, **When** otro jugador introduce el código correcto,
-   **Then** entra en la misma partida y ambos se ven mutuamente.
+1. **Given** una sala de espera con 1 jugador, **When** otro jugador introduce el código correcto,
+   **Then** entra en la misma sala de espera y ambos aparecen en la lista de jugadores. Tras
+   "Empezar", ambos se ven mutuamente en el mapa.
 2. **Given** el enlace de una sala, **When** un jugador lo abre, **Then** entra directamente en
    esa sala sin escribir el código.
 3. **Given** una sala con 4 jugadores, **When** un quinto intenta entrar, **Then** ve el mensaje
@@ -69,6 +89,12 @@ movimientos.
    morir ese zombi.
 6. **Given** un jugador en partida, **When** cierra la pestaña, **Then** su personaje desaparece
    para los demás en menos de 5 s y la partida sigue.
+7. **Given** una sala con la partida ya empezada, **When** un jugador intenta entrar con su
+   código o enlace, **Then** ve el mensaje "Partida en curso" y sigue en la pantalla de inicio.
+8. **Given** una sala de espera con 2 jugadores, **When** el que no es anfitrión mira la sala,
+   **Then** no ve el botón "Empezar", sino el aviso "Esperando al anfitrión".
+9. **Given** una sala con varios jugadores, **When** el anfitrión sale, **Then** el jugador que
+   lleva más tiempo en la sala pasa a ser anfitrión.
 
 ---
 
@@ -155,15 +181,15 @@ Durante la partida, cada jugador ve en pantalla:
 - la lista de jugadores con sus puntuaciones.
 
 Cuando mueren todos los jugadores, aparece una pantalla de fin con la oleada alcanzada y la
-puntuación de cada jugador. Desde ahí cualquiera puede pulsar "Reiniciar" para empezar de nuevo
-en la misma sala con los mismos jugadores.
+puntuación de cada jugador. Desde ahí el anfitrión pulsa "Volver a la sala" y todos regresan a
+la sala de espera. Ahí pueden entrar jugadores nuevos antes de volver a empezar.
 
 **Why this priority**: pule la experiencia y cierra el ciclo de partida. El juego ya es jugable
 sin ello, con un HUD mínimo.
 
 **Independent Test**: se prueba con 2 pestañas. Se verifica que el HUD refleja cambios de vida,
 munición, combo y oleada. Después mueren ambos jugadores, aparece la pantalla de fin con las dos
-puntuaciones, y al reiniciar ambos vuelven a la oleada 1.
+puntuaciones. Al volver a la sala y empezar, ambos juegan la oleada 1 desde cero.
 
 **Acceptance Scenarios**:
 
@@ -174,23 +200,25 @@ puntuaciones, y al reiniciar ambos vuelven a la oleada 1.
    oleada.
 3. **Given** todos los jugadores muertos, **When** muere el último, **Then** todos ven la pantalla
    de fin con la oleada alcanzada y la puntuación de cada jugador.
-4. **Given** la pantalla de fin, **When** cualquier jugador pulsa "Reiniciar", **Then** todos los
-   jugadores de la sala empiezan en la oleada 1 con puntuación 0, vida completa y solo la pistola.
+4. **Given** la pantalla de fin, **When** el anfitrión pulsa "Volver a la sala", **Then** todos
+   los jugadores vuelven a la sala de espera. Al pulsar "Empezar", todos juegan la oleada 1 con
+   puntuación 0, vida completa, combo 0 y solo la pistola.
+5. **Given** la pantalla de fin, **When** un jugador que no es anfitrión la mira, **Then** no ve el
+   botón "Volver a la sala", sino el aviso "Esperando al anfitrión".
 
 ---
 
 ### Edge Cases
 
-- **Entrada en mitad de una oleada**: el jugador aparece en un punto de inicio libre con vida
-  completa y solo la pistola.
-- **Entrada durante la pantalla de fin**: el jugador ve la pantalla de fin y participa en el
-  reinicio.
-- **El creador abandona la sala**: la sala sigue mientras quede algún jugador. Cuando sale el
-  último, la sala se cierra y su código deja de ser válido.
+- **Entrada con la partida en curso**: se rechaza con "Partida en curso", también durante la
+  pantalla de fin. La sala vuelve a admitir jugadores cuando el anfitrión pulsa "Volver a la sala".
+- **El anfitrión abandona la sala**: la sala sigue mientras quede algún jugador, y el anfitrión
+  pasa al que lleva más tiempo en ella. Cuando sale el último, la sala se cierra y su código deja
+  de ser válido.
 - **Código mal escrito**: el código no distingue mayúsculas de minúsculas y se ignoran los
   espacios. Si aun así no existe, se muestra "Sala no encontrada".
-- **Desconexión momentánea**: se trata igual que salir. El jugador puede volver a entrar con el
-  código como jugador nuevo.
+- **Desconexión momentánea**: se trata igual que salir. El jugador no puede volver hasta que la
+  sala esté de nuevo en espera.
 - **Demasiados enemigos a la vez**: el número de enemigos vivos simultáneos tiene un tope. Los
   enemigos restantes de la oleada aparecen a medida que mueren otros.
 - **Punto de aparición bloqueado**: si hay una barricada o un jugador encima, el enemigo aparece en
@@ -208,10 +236,18 @@ puntuaciones, y al reiniciar ambos vuelven a la oleada 1.
 
 **Salas y conexión**
 
-- **FR-001**: El sistema MUST permitir a un jugador crear una sala privada y mostrarle un código
-  único de 5 letras y un enlace para compartir.
-- **FR-002**: El sistema MUST permitir entrar en una sala existente introduciendo su código
+- **FR-001**: El sistema MUST permitir a un jugador crear una sala privada. Ese jugador pasa a
+  ser el anfitrión, entra en la sala de espera y ve un código único de 5 letras y un enlace para
+  compartir.
+- **FR-002**: El sistema MUST permitir entrar en una sala en espera introduciendo su código
   (sin distinguir mayúsculas ni espacios) o abriendo su enlace.
+- **FR-036**: La sala de espera MUST mostrar a todos el código, el enlace y la lista de jugadores
+  con nombre y color. Solo el anfitrión MUST ver y poder pulsar "Empezar". Los demás ven
+  "Esperando al anfitrión".
+- **FR-037**: Mientras la partida está en curso, incluida la pantalla de fin, el sistema MUST
+  rechazar nuevas entradas con el mensaje "Partida en curso".
+- **FR-038**: Si el anfitrión sale de la sala, el sistema MUST nombrar anfitrión al jugador que
+  lleva más tiempo en ella.
 - **FR-003**: El sistema MUST limitar cada sala a 4 jugadores y rechazar al quinto con el mensaje
   "Sala llena".
 - **FR-004**: El sistema MUST mostrar "Sala no encontrada" cuando el código no corresponde a una
@@ -298,9 +334,9 @@ puntuaciones, y al reiniciar ambos vuelven a la oleada 1.
 - **FR-031**: Cuando todos los jugadores de la sala están muertos a la vez, la partida MUST
   terminar y mostrar a todos una pantalla de fin con la oleada alcanzada y la puntuación de cada
   jugador.
-- **FR-032**: Desde la pantalla de fin, cualquier jugador MUST poder reiniciar. El reinicio
-  devuelve a todos los jugadores de la sala a la oleada 1 con puntuación 0, vida completa, combo 0
-  y solo la pistola.
+- **FR-032**: Desde la pantalla de fin, solo el anfitrión MUST poder pulsar "Volver a la sala".
+  Esto devuelve a todos a la sala de espera. La siguiente partida empieza en la oleada 1 con
+  puntuación 0, vida completa, combo 0 y solo la pistola para todos.
 
 **Presentación**
 
@@ -321,8 +357,8 @@ puntuaciones, y al reiniciar ambos vuelven a la oleada 1.
 
 - **Sala**: partida compartida. Tiene:
   - código de 5 letras;
-  - jugadores (1-4);
-  - estado: en oleada, en pausa entre oleadas o terminada;
+  - jugadores (1-4), uno de ellos anfitrión;
+  - estado: en espera, en oleada, en pausa entre oleadas o terminada;
   - número de oleada;
   - enemigos pendientes de aparecer.
 - **Jugador**: participante de una sala. Tiene:
