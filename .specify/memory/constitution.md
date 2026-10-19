@@ -1,14 +1,3 @@
-<!--
-Sync Impact Report
-- Version change: (template) → 1.0.0
-- Modified principles: placeholders → I. Servidor autoritativo; II. Lógica de juego compartida y
-  pura; III. Simplicidad (YAGNI); IV. Arte original generado por código; V. Verificación por historia
-- Added sections: Restricciones técnicas; Flujo de desarrollo; Governance
-- Removed sections: none
-- Templates: plan/spec/tasks templates read the constitution at runtime; no edits made here
-- Deferred TODOs: none
--->
-
 # Boxhead Online Constitution
 
 ## Core Principles
