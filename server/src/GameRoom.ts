@@ -1,16 +1,20 @@
 import { type Client, Room, ServerError } from '@colyseus/core';
 import {
-  AMMO_CRATE, DEVIL, DIRS, DROPS, ENEMIES, FIREBALL, GRENADE, GRENADE_FUSE, HEALTH_CRATE, LOCKED, PATCH_MS, PLAYER,
-  STARTING_AMMO, TICK_HZ, TILE, WAVES, WEAPONS, ZOMBIE,
+  AMMO_CRATE, BARREL, BARRICADE, DEVIL, DIRS, DROPS, ENEMIES, FIREBALL, GRENADE, GRENADE_FUSE, HEALTH_CRATE, LOCKED, MINE,
+  PATCH_MS, PLACEABLE_HP, PLAYER, STARTING_AMMO, TICK_HZ, TILE, WAVES, WEAPONS, type WeaponDef, ZOMBIE,
   type Vec, buildFlowField, circlesOverlap, dirFrom, isSolid, moveCircle, nextStep, parseMap, raycast, registerKill,
-  tickCombo, tileCenter, toTile, waveComposition,
+  resolveExplosions, tickCombo, tileCenter, toTile, waveComposition,
 } from '@game/shared';
-import { Crate, Enemy, GameState, Player, Projectile } from './state.ts';
+import { Crate, Enemy, GameState, Placeable, Player, Projectile } from './state.ts';
 
 const MAP = parseMap();
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
 const PROJECTILE_RADIUS = 6;
 const BULLET_WIDTH = 8; // aim forgiveness: 8-direction aiming needs a wide bullet
+const BARRICADE_COST = 20; // flow-field cost: detour up to ~20 tiles before breaking through
+const weaponFor = (place: number) => WEAPONS.find((w) => w.place === place)!;
+
+interface Explosion { x: number; y: number; r: number; damage: number; ownerId: string; key?: string }
 
 const axis = (v: unknown) => Math.sign(Number(v) || 0);
 const cleanName = (v: unknown) => String(v ?? '').replace(/[\x00-\x1f\x7f]/g, '').trim().slice(0, 12);
@@ -143,8 +147,12 @@ export class GameRoom extends Room<{ state: GameState }> {
     }
   }
 
-  private blocked = (_tx: number, _ty: number) => false;
-  private extraCost = (_tx: number, _ty: number) => 0;
+  // Barricades and barrels are solid for everyone; mines are not (FR-029).
+  private blocked = (tx: number, ty: number) => {
+    const p = this.state.placeables.get(`${tx},${ty}`);
+    return !!p && p.kind !== MINE;
+  };
+  private extraCost = (tx: number, ty: number) => (this.blocked(tx, ty) ? BARRICADE_COST : 0);
 
   private tick(dt: number) {
     const s = this.state;
@@ -157,6 +165,7 @@ export class GameRoom extends Room<{ state: GameState }> {
     if (s.phase === 'playing') this.spawnEnemies(dt);
     this.updateEnemies(dt);
     this.updateProjectiles(dt);
+    this.triggerMines();
     this.pickCrates();
     if ([...s.players.values()].every((p) => !p.alive)) {
       s.phase = 'gameover'; // wins over the end of the wave
@@ -212,11 +221,15 @@ export class GameRoom extends Room<{ state: GameState }> {
     const d = DIRS[p.dir];
     if (w.kind === 'hitscan') {
       const base = Math.atan2(d.y, d.x);
-      const targets = [...this.state.enemies].map(([eid, e]) => ({ id: eid, x: e.x, y: e.y, radius: ENEMIES[e.kind].radius + BULLET_WIDTH }));
+      const targets = [...this.state.enemies].map(([eid, e]) => ({ id: eid, barrel: false, x: e.x, y: e.y, radius: ENEMIES[e.kind].radius + BULLET_WIDTH }));
+      for (const [key, b] of this.state.placeables) {
+        if (b.kind === BARREL) targets.push({ id: key, barrel: true, x: tileCenter(b.tx), y: tileCenter(b.ty), radius: TILE / 2 });
+      }
       for (let i = 0; i < w.pellets; i++) {
         const a = w.pellets > 1 ? base - w.spread / 2 + (w.spread * i) / (w.pellets - 1) : base;
         const r = raycast(MAP, p.x, p.y, Math.cos(a), Math.sin(a), w.range, targets);
-        if (r.hit) this.damageEnemy(r.hit.id, w.damage, id);
+        if (r.hit?.barrel) this.damagePlaceable(r.hit.id, w.damage);
+        else if (r.hit) this.damageEnemy(r.hit.id, w.damage, id);
         this.broadcast('shot', { x1: p.x, y1: p.y, x2: r.endX, y2: r.endY, w: p.weapon });
       }
     } else if (w.kind === 'thrown') {
@@ -230,11 +243,59 @@ export class GameRoom extends Room<{ state: GameState }> {
       g.life = GRENADE_FUSE;
       g.ownerId = id;
       this.state.projectiles.set(String(this.nextId++), g);
-    } else {
-      return; // placeables arrive with US4
+    } else if (!this.place(id, p, w)) {
+      return;
     }
     p.cooldown = 1 / w.rate;
     if (ammo > 0) p.ammo[p.weapon] = ammo - 1;
+  }
+
+  // FR-013: the tile ahead must be floor with no placeable, player or enemy on it.
+  private place(id: string, p: Player, w: WeaponDef): boolean {
+    // The tile just past the body edge, so the placer never overlaps it.
+    const d = DIRS[p.dir];
+    const tx = toTile(p.x + d.x * (PLAYER.radius + TILE));
+    const ty = toTile(p.y + d.y * (PLAYER.radius + TILE));
+    const key = `${tx},${ty}`;
+    if (isSolid(MAP, tx, ty) || this.state.placeables.has(key)) return false;
+    const cx = tileCenter(tx);
+    const cy = tileCenter(ty);
+    const covers = (e: Vec, r: number) => Math.abs(e.x - cx) < TILE / 2 + r && Math.abs(e.y - cy) < TILE / 2 + r;
+    for (const o of this.state.players.values()) if (o.alive && covers(o, PLAYER.radius)) return false;
+    for (const e of this.state.enemies.values()) if (covers(e, ENEMIES[e.kind].radius)) return false;
+    const k = new Placeable();
+    k.kind = w.place!;
+    k.tx = tx;
+    k.ty = ty;
+    k.hp = PLACEABLE_HP[k.kind];
+    k.ownerId = id;
+    this.state.placeables.set(key, k);
+    this.flowTimer = 0;
+    return true;
+  }
+
+  private damagePlaceable(key: string, damage: number) {
+    const k = this.state.placeables.get(key);
+    if (!k || k.kind === MINE) return;
+    k.hp -= damage;
+    if (k.hp > 0) return;
+    this.state.placeables.delete(key);
+    this.flowTimer = 0;
+    if (k.kind === BARREL) {
+      const w = weaponFor(BARREL);
+      this.explode({ x: tileCenter(k.tx), y: tileCenter(k.ty), r: w.radius, damage: w.damage, ownerId: k.ownerId });
+    }
+  }
+
+  private triggerMines() {
+    for (const [key, m] of this.state.placeables) {
+      if (m.kind !== MINE) continue;
+      const stepped = [...this.state.enemies.values()].some((e) => toTile(e.x) === m.tx && toTile(e.y) === m.ty);
+      if (!stepped) continue;
+      this.state.placeables.delete(key);
+      const w = weaponFor(MINE);
+      this.explode({ x: tileCenter(m.tx), y: tileCenter(m.ty), r: w.radius, damage: w.damage, ownerId: m.ownerId });
+    }
   }
 
   private damageEnemy(id: string, damage: number, killerId: string) {
@@ -266,12 +327,26 @@ export class GameRoom extends Room<{ state: GameState }> {
     }
   }
 
-  // Explosions hurt enemies only, never players (FR-014).
-  private explode(x: number, y: number, radius: number, damage: number, ownerId: string) {
-    for (const [id, e] of this.state.enemies) {
-      if (circlesOverlap(e, ENEMIES[e.kind].radius, { x, y }, radius)) this.damageEnemy(id, damage, ownerId);
+  // Explosions chain through barrels and hurt enemies and barricades, never players (FR-014, FR-027).
+  private explode(origin: Explosion) {
+    const s = this.state;
+    const w = weaponFor(BARREL);
+    const barrels: Explosion[] = [...s.placeables]
+      .filter(([, k]) => k.kind === BARREL)
+      .map(([key, k]) => ({ key, x: tileCenter(k.tx), y: tileCenter(k.ty), r: w.radius, damage: w.damage, ownerId: k.ownerId }));
+    for (const b of resolveExplosions([origin], barrels)) {
+      if (b.key) s.placeables.delete(b.key);
+      for (const [id, e] of s.enemies) {
+        if (circlesOverlap(e, ENEMIES[e.kind].radius, b, b.r)) this.damageEnemy(id, b.damage, b.ownerId);
+      }
+      for (const [key, k] of s.placeables) {
+        if (k.kind === BARRICADE && circlesOverlap({ x: tileCenter(k.tx), y: tileCenter(k.ty) }, TILE / 2, b, b.r)) {
+          this.damagePlaceable(key, b.damage);
+        }
+      }
+      this.broadcast('boom', { x: b.x, y: b.y, r: b.r });
     }
-    this.broadcast('boom', { x, y, r: radius });
+    this.flowTimer = 0;
   }
 
   private spawnEnemies(dt: number) {
@@ -312,6 +387,7 @@ export class GameRoom extends Room<{ state: GameState }> {
       const dist = Math.hypot(target.x - e.x, target.y - e.y);
       let vx = 0;
       let vy = 0;
+      let obstacle = ''; // barricade or barrel on the path, attacked when adjacent (FR-021)
       if (dist < TILE * 1.5) {
         vx = target.x - e.x;
         vy = target.y - e.y;
@@ -320,6 +396,7 @@ export class GameRoom extends Room<{ state: GameState }> {
         if (step) {
           vx = tileCenter(step.tx) - e.x;
           vy = tileCenter(step.ty) - e.y;
+          if (this.blocked(step.tx, step.ty) && Math.hypot(vx, vy) < TILE + 2) obstacle = `${step.tx},${step.ty}`;
         }
       }
       const len = Math.hypot(vx, vy);
@@ -350,6 +427,9 @@ export class GameRoom extends Room<{ state: GameState }> {
       if (e.attackCooldown <= 0 && circlesOverlap(e, def.radius + 4, target, PLAYER.radius)) {
         e.attackCooldown = def.meleeEvery;
         this.damagePlayer(target, def.meleeDamage);
+      } else if (e.attackCooldown <= 0 && obstacle) {
+        e.attackCooldown = def.meleeEvery;
+        this.damagePlaceable(obstacle, def.meleeDamage);
       }
 
       if (def.fireEvery) {
@@ -388,7 +468,7 @@ export class GameRoom extends Room<{ state: GameState }> {
         if (pr.life <= 0) {
           s.projectiles.delete(id);
           const w = WEAPONS.find((x) => x.kind === 'thrown')!;
-          this.explode(pr.x, pr.y, w.radius, w.damage, pr.ownerId);
+          this.explode({ x: pr.x, y: pr.y, r: w.radius, damage: w.damage, ownerId: pr.ownerId });
         }
         continue;
       }

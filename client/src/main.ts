@@ -32,6 +32,7 @@ async function enter(join: () => Promise<Room<any, GameState>>) {
   }
   phase = '';
   const r = room;
+  if (DEBUG) Object.assign(window, { room, game });
   room.onMessage('shot', (m) => scene().sys.isActive() && scene().shot(m));
   room.onMessage('boom', (m) => scene().sys.isActive() && scene().boom(m));
   room.onMessage('unlock', (m: { id: string; w: number }) => m.id === r.sessionId && toast(`¡Nueva arma: ${WEAPONS[m.w].name}!`));

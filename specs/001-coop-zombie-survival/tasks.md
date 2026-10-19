@@ -410,28 +410,28 @@ anfitrión puede cambiar y los rechazos dan mensajes claros.
 
 ### Tests de la User Story 4
 
-- [ ] T046 [P] [US4] Añadir a `shared/test/rules.test.ts` tests que fallen de
+- [X] T046 [P] [US4] Añadir a `shared/test/rules.test.ts` tests que fallen de
   `resolveExplosions`:
   - 3 barriles en fila dentro del radio explotan;
   - un 4.º barril fuera del radio no explota;
   - un origen sin barriles cerca devuelve solo su propia explosión.
-- [ ] T047 [P] [US4] Añadir a `shared/test/flowfield.test.ts` tests que fallen de `extraCost`:
+- [X] T047 [P] [US4] Añadir a `shared/test/flowfield.test.ts` tests que fallen de `extraCost`:
   - si hay un desvío corto, la ruta evita una barricada de coste 20;
   - si no hay alternativa, la ruta la atraviesa.
 
 ### Implementación de la User Story 4
 
-- [ ] T048 [US4] Añadir a `shared/src/rules.ts` la función
+- [X] T048 [US4] Añadir a `shared/src/rules.ts` la función
   `resolveExplosions(origins:{x,y,r}[], barrels:{x,y,r}[])`. Hace un BFS por radio y devuelve la
   lista ordenada de explosiones, incluidos los barriles encadenados. Debe hacer pasar T046 y T047
   (T047 ya debería pasar con el `extraCost` de T020).
-- [ ] T049 [US4] Colocación (`kind==='placeable'`) en `server/src/GameRoom.ts`:
+- [X] T049 [US4] Colocación (`kind==='placeable'`) en `server/src/GameRoom.ts`:
   - la casilla destino es la adyacente en `DIRS[dir]`;
   - la regla de FR-013 / data-model: "Debe ser suelo, sin colocable y sin jugador ni enemigo
     encima. Si no, no se coloca nada ni se consume munición";
   - se crea un `Placeable` con clave `"tx,ty"` y hp 150 (barricada) o 1 (barril);
   - se fuerza la reconstrucción del campo de flujo.
-- [ ] T050 [US4] Interacción de los colocables con el mundo, en `server/src/GameRoom.ts`:
+- [X] T050 [US4] Interacción de los colocables con el mundo, en `server/src/GameRoom.ts`:
   - barricadas y barriles son sólidos en el callback `blocked` de `moveCircle`, para jugadores y
     enemigos;
   - el `extraCost` del campo de flujo devuelve 20 en sus casillas;
@@ -443,11 +443,11 @@ anfitrión puede cambiar y los rechazos dan mensajes claros.
     barricadas dentro del radio, nunca a jugadores;
   - una mina explota cuando un enemigo entra en su casilla;
   - las muertes por explosión se atribuyen al `ownerId` del colocable o de la granada.
-- [ ] T051 [P] [US4] En `client/src/art.ts`, añadir las texturas `barricade` (cubo de madera),
+- [X] T051 [P] [US4] En `client/src/art.ts`, añadir las texturas `barricade` (cubo de madera),
   `barrel` (caja roja casi cilíndrica) y `mine` (disco plano).
-- [ ] T052 [US4] En `client/src/GameScene.ts`, pintar los colocables según su tipo en el centro
+- [X] T052 [US4] En `client/src/GameScene.ts`, pintar los colocables según su tipo en el centro
   de su casilla, con depth = y. Al salir del estado, se borra su sprite.
-- [ ] T053 [US4] Validar los 5 pasos de quickstart "Historia 4", ejecutar `npm test` y hacer
+- [X] T053 [US4] Validar los 5 pasos de quickstart "Historia 4", ejecutar `npm test` y hacer
   commit `feat: placeable barricades, chain-reacting barrels and mines (US4)`.
 
 **Checkpoint**: táctica de colocables completa.

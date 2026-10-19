@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 import { COMBO, STARTING_AMMO, WEAPONS } from '../src/config.ts';
-import { registerKill, tickCombo, waveComposition } from '../src/rules.ts';
+import { registerKill, resolveExplosions, tickCombo, waveComposition } from '../src/rules.ts';
 
 const fresh = () => ({ combo: 0, comboTime: 0, score: 0, ammo: [...STARTING_AMMO] });
 
@@ -37,4 +37,12 @@ test('waveComposition grows with wave and players, devils capped at 40%', () => 
   const late = waveComposition(30, 2);
   expect(late.devils).toBeGreaterThan(0);
   expect(late.devils / total(late)).toBeLessThanOrEqual(0.4);
+});
+
+test('resolveExplosions chains barrels within radius', () => {
+  const barrels = [0, 60, 120, 300].map((x) => ({ x, y: 0, r: 80 }));
+  const origin = { x: -50, y: 0, r: 90 };
+  const blasts = resolveExplosions([origin], barrels);
+  expect(blasts).toEqual([origin, barrels[0], barrels[1], barrels[2]]);
+  expect(resolveExplosions([{ x: 1000, y: 0, r: 90 }], barrels)).toHaveLength(1);
 });

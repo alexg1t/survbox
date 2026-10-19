@@ -81,6 +81,18 @@ export function makeTextures(scene: Phaser.Scene): void {
     box(g, 0, 0, 20, 6, 14, 0x8a7a3a);
     g.fillStyle(0xe0c23d).fillRect(3, 11, 14, 3);
   });
+  make('barricade', TILE, TILE + 8, () => {
+    box(g, 1, 0, TILE - 2, 14, TILE - 6, 0x9a6a3a);
+    g.lineStyle(2, 0x5a3a1a).lineBetween(3, 22, TILE - 3, 22).lineBetween(3, 32, TILE - 3, 32);
+  });
+  make('barrel', 22, 30, () => {
+    box(g, 0, 0, 22, 8, 22, 0xc03a2a);
+    g.fillStyle(0x2a2a2a).fillRect(0, 13, 22, 3).fillRect(0, 23, 22, 3);
+  });
+  make('mine', 18, 10, () => {
+    g.fillStyle(0x3a3a3a).fillEllipse(9, 5, 18, 10);
+    g.fillStyle(0xff3a2a).fillCircle(9, 5, 2);
+  });
   make('crate_hp', 20, 20, () => {
     box(g, 0, 0, 20, 6, 14, 0xe8e8e8);
     g.fillStyle(0xd03030).fillRect(8, 8, 4, 10).fillRect(5, 11, 10, 4);

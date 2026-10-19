@@ -1,5 +1,5 @@
 import type { Room } from '@colyseus/sdk';
-import { DEVIL, GRENADE, HEALTH_CRATE, MINE, PLAYER, TILE, moveCircle, parseMap } from '@game/shared';
+import { BARREL, DEVIL, GRENADE, HEALTH_CRATE, MINE, PLAYER, TILE, moveCircle, parseMap } from '@game/shared';
 import type { GameState } from '@game/server/src/state.ts';
 import * as Phaser from 'phaser';
 import { CHAR_H, WALL_HEIGHT, makeTextures } from './art.ts';
@@ -118,6 +118,11 @@ export class GameScene extends Phaser.Scene {
     }
     for (const [id, pr] of state.projectiles) {
       this.sync(`j:${id}`, seen, pr.x, pr.y, true, 0.5).setTexture(pr.kind === GRENADE ? 'grenade' : 'fireball');
+    }
+    for (const [key, k] of state.placeables) {
+      const x = k.tx * TILE + TILE / 2;
+      if (k.kind === MINE) this.sync(`k:${key}`, seen, x, k.ty * TILE + TILE / 2, false, 0.5).setTexture('mine').setDepth(k.ty * TILE);
+      else this.sync(`k:${key}`, seen, x, (k.ty + 1) * TILE - 2, false, 1).setTexture(k.kind === BARREL ? 'barrel' : 'barricade');
     }
     for (const [id, c] of state.crates) {
       this.sync(`c:${id}`, seen, c.x, c.y, false, 0.7).setTexture(c.kind === HEALTH_CRATE ? 'crate_hp' : 'crate_ammo');

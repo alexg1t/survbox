@@ -37,3 +37,22 @@ export function waveComposition(n: number, players: number): { zombies: number; 
   const devils = Math.floor(total * Math.min(0.05 * (n - 1), 0.4));
   return { zombies: total - devils, devils };
 }
+
+export interface Blast { x: number; y: number; r: number }
+
+// Chain reaction: every barrel inside a blast radius explodes too (FR-027).
+// Returns the origins followed by the chained barrels, in explosion order.
+export function resolveExplosions<B extends Blast>(origins: B[], barrels: B[]): B[] {
+  const out = [...origins];
+  const left = new Set(barrels);
+  for (let i = 0; i < out.length; i++) {
+    const b = out[i];
+    for (const barrel of left) {
+      if (Math.hypot(barrel.x - b.x, barrel.y - b.y) <= b.r) {
+        left.delete(barrel);
+        out.push(barrel);
+      }
+    }
+  }
+  return out;
+}

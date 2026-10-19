@@ -57,3 +57,24 @@ test('nextStep moves to the lowest neighbour', () => {
   expect(nextStep(f, open, 5, 3)).toEqual({ tx: 4, ty: 2 });
   expect(nextStep(f, open, 1, 1)).toBeNull();
 });
+
+test('extraCost: paths avoid a barricade when a short detour exists', () => {
+  const m = parseMap([
+    '#######',
+    '#.....#',
+    '#.###.#',
+    '#.....#',
+    '#######',
+  ]);
+  const cost = (tx: number, ty: number) => (tx === 3 && ty === 1 ? 20 : 0);
+  const f = buildFlowField(m, [{ tx: 1, ty: 1 }], cost);
+  expect(at(f, m, 5, 1)).toBeLessThan(20);
+  expect(nextStep(f, m, 4, 1)).not.toEqual({ tx: 3, ty: 1 });
+});
+
+test('extraCost: with no alternative the path goes through the barricade', () => {
+  const m = parseMap(['#######', '#.....#', '#######']);
+  const f = buildFlowField(m, [{ tx: 1, ty: 1 }], (tx, ty) => (tx === 3 && ty === 1 ? 20 : 0));
+  expect(at(f, m, 5, 1)).toBeCloseTo(24);
+  expect(nextStep(f, m, 4, 1)).toEqual({ tx: 3, ty: 1 });
+});
