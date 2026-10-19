@@ -1,4 +1,4 @@
-import { type Client, Room, ServerError } from '@colyseus/core';
+import { type Client, Room, ServerError, matchMaker } from '@colyseus/core';
 import {
   AMMO_CRATE, BARREL, BARRICADE, DEVIL, DIRS, DROPS, ENEMIES, FIREBALL, GRENADE, GRENADE_FUSE, HEALTH_CRATE, LOCKED, MINE,
   PATCH_MS, PLACEABLE_HP, PLAYER, STARTING_AMMO, TICK_HZ, TILE, WAVES, WEAPONS, type WeaponDef, ZOMBIE,
@@ -40,9 +40,10 @@ export class GameRoom extends Room<{ state: GameState }> {
   private spawnIndex = 0;
   private queue: number[] = []; // enemy kinds still to spawn this wave
 
-  onCreate() {
-    // ponytail: no collision check, query matchMaker if deployed
-    this.roomId = Array.from({ length: 5 }, () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]).join('');
+  async onCreate() {
+    do {
+      this.roomId = Array.from({ length: 5 }, () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]).join('');
+    } while ((await matchMaker.query({ roomId: this.roomId })).length);
     this.setPatchRate(PATCH_MS);
     this.setSimulationInterval((dtMs) => this.tick(dtMs / 1000), 1000 / TICK_HZ);
 

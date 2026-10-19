@@ -5,8 +5,13 @@
   "workspaces": ["shared", "server", "client"],
   "scripts": {
     "dev": "node scripts/dev.mjs",
+    "build": "npm run build -w @game/client",
+    "start": "npm start -w @game/server",
     "test": "npm test -w @game/shared",
     "typecheck": "npm run typecheck --workspaces"
+  },
+  "engines": {
+    "node": "24.x"
   },
   "devDependencies": {
     "typescript": "~7.0.2"

@@ -6,7 +6,10 @@ import { hex, PLAYER_COLORS } from './art.ts';
 import { GameScene } from './GameScene.ts';
 import { $, show, toast } from './ui.ts';
 
-const client = new Client(`ws://${location.hostname}:2567`);
+// Dev: Vite on :5173 and the game server on :2567. Prod: the server serves this page, same origin.
+const client = new Client(
+  import.meta.env.DEV ? `ws://${location.hostname}:2567` : `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}`,
+);
 
 const game = new Phaser.Game({
   type: Phaser.AUTO,

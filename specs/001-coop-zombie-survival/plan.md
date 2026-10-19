@@ -123,4 +123,7 @@ archivo pase de unas 400 líneas.
 
 ## Complexity Tracking
 
-Sin violaciones de la constitución que justificar.
+| Excepción | Por qué | Alternativa descartada |
+|-----------|---------|------------------------|
+| `express` como dependencia directa de `server` | En producción un solo servicio sirve `client/dist` con `express.static` junto al socket de Colyseus. `@colyseus/core` ya instala `express@5`, así que no se descarga nada nuevo; solo se declara. | Servidor estático propio con `node:http` + `fs`: más código, y Colyseus ya monta su app Express para el matchmaking. |
+| Despliegue en Render dentro de esta feature | Lo pidió el usuario tras el MVP. Es un único web service (build del cliente + `node src/index.ts`) sin cambios de gameplay. | Feature spec-kit separada: es demasiado proceso para 3 archivos de configuración. |
