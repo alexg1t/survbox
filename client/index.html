@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Box Survival</title>
+  <style>
+    :root { --bg: #14161a; --panel: #23262d; --text: #e8e6e3; --accent: #e0a63a; --muted: #8b8f98; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font: 16px system-ui, sans-serif; overflow: hidden; }
+    #game { position: fixed; inset: 0; }
+    .panel { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--panel); padding: 24px 28px; border-radius: 10px; min-width: 320px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 10px 40px #000a; }
+    .panel h1, .panel h2 { margin: 0 0 4px; }
+    [hidden] { display: none !important; }
+    input { font: inherit; padding: 10px 12px; border-radius: 6px; border: 1px solid #444; background: #15171b; color: var(--text); }
+    button { font: inherit; font-weight: 600; padding: 12px 16px; border-radius: 6px; border: 0; background: var(--accent); color: #1b1b1b; cursor: pointer; }
+    button.secondary { background: #3a3f4a; color: var(--text); }
+    .row { display: flex; gap: 8px; }
+    .row > input { flex: 1; text-transform: uppercase; }
+    .error { color: #ff7a6b; min-height: 1.2em; }
+    .muted { color: var(--muted); }
+    .code { font: 700 40px ui-monospace, monospace; letter-spacing: 6px; text-align: center; }
+    ul.players { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+    .swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 8px; vertical-align: -1px; }
+    #hud { position: fixed; top: 12px; left: 12px; pointer-events: none; font-weight: 600; text-shadow: 0 1px 2px #000; display: flex; flex-direction: column; gap: 4px; }
+    #hud .bar { width: 160px; height: 6px; background: #0008; border-radius: 3px; overflow: hidden; }
+    #hud .bar > div { height: 100%; background: var(--accent); }
+    #scores { position: fixed; top: 12px; right: 12px; pointer-events: none; text-shadow: 0 1px 2px #000; }
+    #toast { position: fixed; top: 22%; left: 50%; transform: translateX(-50%); font: 700 28px system-ui, sans-serif; text-shadow: 0 2px 4px #000; pointer-events: none; }
+  </style>
+</head>
+<body>
+  <div id="game"></div>
+
+  <section id="menu" class="panel">
+    <h1>Box Survival</h1>
+    <input id="name" maxlength="12" placeholder="Tu nombre (opcional)" autocomplete="off" />
+    <button id="create">Crear sala</button>
+    <div class="row">
+      <input id="code" maxlength="7" placeholder="Código" autocomplete="off" />
+      <button id="join" class="secondary">Entrar</button>
+    </div>
+    <div id="menu-error" class="error" role="alert"></div>
+  </section>
+
+  <section id="lobby" class="panel" hidden>
+    <h2>Sala de espera</h2>
+    <div class="muted">Código de sala</div>
+    <div id="lobby-code" class="code"></div>
+    <button id="copy" class="secondary">Copiar enlace</button>
+    <ul id="lobby-players" class="players"></ul>
+    <button id="start">Empezar</button>
+    <div id="lobby-wait" class="muted">Esperando al anfitrión</div>
+  </section>
+
+  <section id="hud" hidden>
+    <div id="hud-hp"></div>
+    <div id="hud-weapon"></div>
+    <div id="hud-combo"></div>
+    <div class="bar"><div id="hud-combo-bar"></div></div>
+    <div id="hud-wave"></div>
+    <div id="hud-code" class="muted"></div>
+    <div id="hud-hint" class="muted"></div>
+  </section>
+  <ul id="scores" class="players" hidden></ul>
+
+  <section id="gameover" class="panel" hidden>
+    <h2>Fin de la partida</h2>
+    <div id="gameover-wave"></div>
+    <ul id="gameover-scores" class="players"></ul>
+    <button id="back">Volver a la sala</button>
+    <div id="gameover-wait" class="muted">Esperando al anfitrión</div>
+  </section>
+
+  <div id="toast" hidden></div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

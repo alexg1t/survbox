@@ -29,12 +29,12 @@ con un commit.
 **Purpose**: monorepo con 3 workspaces, versiones fijadas (research R1) y arranque en
 desarrollo (R11).
 
-- [ ] T001 Crear el `package.json` raíz:
+- [X] T001 Crear el `package.json` raíz:
   - `"private": true`, `"type": "module"` y `"workspaces": ["shared","server","client"]`;
   - scripts `"dev": "node scripts/dev.mjs"`, `"test": "npm test -w @game/shared"` y
     `"typecheck": "npm run typecheck --workspaces"`;
   - crear también `.gitignore` con `node_modules/` y `dist/`.
-- [ ] T002 [P] Crear `tsconfig.base.json` con estas opciones:
+- [X] T002 [P] Crear `tsconfig.base.json` con estas opciones:
   - `strict: true`;
   - `target`/`lib` `ES2023` + `DOM`;
   - `module`/`moduleResolution` `NodeNext`;
@@ -44,26 +44,26 @@ desarrollo (R11).
   - `noEmit: true`;
   - `skipLibCheck: true`;
   - `verbatimModuleSyntax: true`.
-- [ ] T003 [P] Crear `shared/package.json` y `shared/tsconfig.json` (extiende la base):
+- [X] T003 [P] Crear `shared/package.json` y `shared/tsconfig.json` (extiende la base):
   - nombre `@game/shared`, `"type": "module"`;
   - `"main"` y `"exports"`: `"./src/index.ts"`;
   - scripts `test: vitest run` y `typecheck: tsc -p .`;
   - devDeps `vitest@~5.0.5` y `typescript@~7.0.2`.
-- [ ] T004 [P] Crear `server/package.json` y `server/tsconfig.json`:
+- [X] T004 [P] Crear `server/package.json` y `server/tsconfig.json`:
   - nombre `@game/server`, `"type": "module"`;
   - deps `@colyseus/core@~0.18.19`, `@colyseus/ws-transport@~0.18.4`,
     `@colyseus/schema@~5.0.41` y `@game/shared@*`;
   - scripts `dev: node --watch src/index.ts` y `typecheck: tsc -p .`.
-- [ ] T005 [P] Crear `client/package.json` y `client/tsconfig.json`:
+- [X] T005 [P] Crear `client/package.json` y `client/tsconfig.json`:
   - nombre `@game/client`, `"type": "module"`;
   - deps `phaser@~4.2.1`, `@colyseus/sdk@~0.18.5` y `@game/shared@*`;
   - devDep `vite@~8.3.4`;
   - scripts `dev: vite --host` y `typecheck: tsc -p .`;
   - el `tsconfig` usa `moduleResolution: Bundler`.
-- [ ] T006 [P] Crear `scripts/dev.mjs` (~10 líneas). Lanza `npm run dev -w @game/server` y
+- [X] T006 [P] Crear `scripts/dev.mjs` (~10 líneas). Lanza `npm run dev -w @game/server` y
   `npm run dev -w @game/client` con `{ stdio: 'inherit', shell: true }`, y si uno termina mata
   al otro.
-- [ ] T007 Ejecutar `npm install` y comprobar que `node_modules/@game/shared` enlaza a `shared/`.
+- [X] T007 Ejecutar `npm install` y comprobar que `node_modules/@game/shared` enlaza a `shared/`.
 
 ---
 
@@ -74,7 +74,7 @@ cliente. Todo esto lo usan todas las historias.
 
 **⚠️ CRITICAL**: no empezar ninguna historia antes de terminar esta fase.
 
-- [ ] T008 [P] Crear `shared/src/config.ts` con todas las tablas y constantes de research R12:
+- [X] T008 [P] Crear `shared/src/config.ts` con todas las tablas y constantes de research R12:
   - `TILE=32`, `TICK_HZ=30` y `PATCH_MS=50`.
   - `PLAYER`: `{ hp:100, speed:150, radius:12 }`.
   - `ENEMIES`: índice 0 zombi, índice 1 diablo.
@@ -88,12 +88,12 @@ cliente. Todo esto lo usan todas las historias.
   - `DIRS`: 8 vectores unitarios, índice 0=E y en sentido horario (0=E, 1=SE, 2=S, 3=SO, 4=O,
     5=NO, 6=N, 7=NE).
   - Helper `dirFrom(dx,dy)`.
-- [ ] T009 [P] Escribir en `shared/test/map.test.ts` tests que fallen y comprueben:
+- [X] T009 [P] Escribir en `shared/test/map.test.ts` tests que fallen y comprueben:
   - `parseMap(MAP)` devuelve `w=40` y `h=30`;
   - el borde es todo pared;
   - hay ≥4 `P` y ≥6 `S`;
   - toda casilla `P` y `S` es suelo y se alcanza desde la primera `P` (BFS en el test).
-- [ ] T010 [P] Crear `shared/src/map.ts` con:
+- [X] T010 [P] Crear `shared/src/map.ts` con:
   - `MAP`: 30 strings de 40 caracteres con la leyenda `#` pared, `.` suelo, `P` inicio de
     jugador (≥4) y `S` aparición de enemigos (≥6). El diseño es de "habitaciones": 4-6 salas
     unidas por pasillos y puertas de 2 casillas, con las apariciones en los bordes del mapa;
@@ -103,14 +103,14 @@ cliente. Todo esto lo usan todas las historias.
   - helpers `isSolid(map,tx,ty)` (fuera de límites cuenta como sólido) y `tileCenter(t)`.
 
   Debe hacer pasar T009.
-- [ ] T011 [P] Escribir en `shared/test/physics.test.ts` tests que fallen y comprueben:
+- [X] T011 [P] Escribir en `shared/test/physics.test.ts` tests que fallen y comprueben:
   - `moveCircle` desliza contra una pared sin entrar, también en diagonal contra una esquina;
   - `moveCircle` respeta el callback extra `blocked(tx,ty)`;
   - `raycast` se detiene en una pared con `hit` indefinido;
   - `raycast` devuelve el más cercano de 2 círculos en la línea;
   - `raycast` ignora un círculo que está detrás de una pared;
   - `circlesOverlap`.
-- [ ] T012 Crear `shared/src/physics.ts` con:
+- [X] T012 Crear `shared/src/physics.ts` con:
   - `moveCircle(map, blocked, pos, dx, dy, speed, radius, dt)`: resuelve por ejes, normaliza
     las diagonales y muta `pos`;
   - `raycast(map, x, y, dirX, dirY, range, targets: {x,y,radius}[])`: DDA sobre la rejilla y
@@ -118,9 +118,9 @@ cliente. Todo esto lo usan todas las historias.
   - `circlesOverlap(a, ra, b, rb)`.
 
   Debe hacer pasar T011. Depende de T010.
-- [ ] T013 Crear `shared/src/index.ts`, que re-exporta `config.ts`, `map.ts` y `physics.ts`.
+- [X] T013 Crear `shared/src/index.ts`, que re-exporta `config.ts`, `map.ts` y `physics.ts`.
   `flowfield.ts` y `rules.ts` se añaden cuando existan.
-- [ ] T014 [P] Crear `server/src/state.ts` con todos los schemas de data-model.md. Se usa
+- [X] T014 [P] Crear `server/src/state.ts` con todos los schemas de data-model.md. Se usa
   `schema({...}, 'Name')` con `t.*` de `@colyseus/schema`, sin decoradores (research R3):
   - **`GameState`**: `phase` string `lobby|playing|intermission|gameover`, `hostId`, `wave`
     uint16, `waveTimer` float32, `toSpawn` uint16 y los maps `players`, `enemies`, `projectiles`,
@@ -133,23 +133,23 @@ cliente. Todo esto lo usan todas las historias.
   - **`Projectile`**: `kind`, `x` e `y`.
   - **`Placeable`**: `kind`, `tx`, `ty` y `hp`.
   - **`Crate`**: `kind`, `x` e `y`.
-- [ ] T015 Crear `server/src/index.ts`: `defineServer` con `WebSocketTransport`, la sala
+- [X] T015 Crear `server/src/index.ts`: `defineServer` con `WebSocketTransport`, la sala
   `"game"` registrada como `GameRoom` vía `defineRoom`, y escucha en el puerto `2567`. Crear
   `server/src/GameRoom.ts` como una subclase vacía de `Room` con `state = new GameState()`.
   Verificar que arranca con `npm run dev -w @game/server`.
-- [ ] T016 [P] Crear `client/index.html`:
+- [X] T016 [P] Crear `client/index.html`:
   - título "Box Survival";
   - contenedor `#game` del canvas;
   - capas `#menu`, `#lobby`, `#hud`, `#gameover` y `#toast`, todas ocultas salvo `#menu`;
   - CSS mínimo inline: fondo oscuro, paneles centrados, botones grandes y HUD arriba a la
     izquierda con `pointer-events:none`.
-- [ ] T017 [P] Crear `client/src/ui.ts` con:
+- [X] T017 [P] Crear `client/src/ui.ts` con:
   - `show(screen)`, que alterna qué capa se ve;
   - `toast(text, ms)`;
   - el helper de consulta `$()`.
 
   No contiene lógica de juego.
-- [ ] T018 Crear `client/src/main.ts`:
+- [X] T018 Crear `client/src/main.ts`:
   - el `Game` de Phaser (`parent: 'game'`, `pixelArt: false`, `scale: RESIZE`), con la escena
     `GameScene` sin arrancar;
   - el `Client` de Colyseus apuntando a `ws://${location.hostname}:2567`.

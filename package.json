@@ -1,0 +1,14 @@
+{
+  "name": "box-survival",
+  "private": true,
+  "type": "module",
+  "workspaces": ["shared", "server", "client"],
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "test": "npm test -w @game/shared",
+    "typecheck": "npm run typecheck --workspaces"
+  },
+  "devDependencies": {
+    "typescript": "~7.0.2"
+  }
+}

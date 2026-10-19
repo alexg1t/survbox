@@ -1,0 +1,18 @@
+{
+  "name": "@game/client",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vite build",
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "@colyseus/sdk": "~0.18.5",
+    "@game/shared": "*",
+    "phaser": "~4.2.1"
+  },
+  "devDependencies": {
+    "vite": "~8.3.4"
+  }
+}
