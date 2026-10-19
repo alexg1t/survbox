@@ -461,21 +461,21 @@ a la sala controlada por el anfitrión.
 
 **Independent Test**: [quickstart.md](./quickstart.md) "Historia 5", con 2 pestañas.
 
-- [ ] T054 [US5] Mensaje `lobby` en `server/src/GameRoom.ts`:
+- [X] T054 [US5] Mensaje `lobby` en `server/src/GameRoom.ts`:
   - se ignora si no viene de `hostId` o si `phase!=='gameover'`;
   - vacía enemigos, proyectiles, colocables y cajas;
   - resetea a cada jugador: puntos 0, combo 0, hp 100, `ammo=[-2,-1,-1,-1,-1,-1,-1]` y arma 0;
   - pone `phase='lobby'` y `wave=0`, de modo que vuelve a aceptar entradas (FR-032, FR-037).
-- [ ] T055 [P] [US5] En `client/src/ui.ts` y `client/index.html`, añadir al HUD el marcador:
+- [X] T055 [P] [US5] En `client/src/ui.ts` y `client/index.html`, añadir al HUD el marcador:
   todos los jugadores con muestra de color, nombre y puntos, ordenados por puntos y actualizados
   en cada frame desde el estado (FR-033).
-- [ ] T056 [US5] Pantalla `#gameover` en `client/src/ui.ts`, `client/src/main.ts` y
+- [X] T056 [US5] Pantalla `#gameover` en `client/src/ui.ts`, `client/src/main.ts` y
   `client/index.html`:
   - muestra la oleada alcanzada y las puntuaciones de cada jugador, ordenadas;
   - "Volver a la sala" solo aparece para el anfitrión y envía `lobby`;
   - los demás ven "Esperando al anfitrión";
   - cuando `phase` pasa a `lobby`, se para `GameScene` y se muestra `#lobby`.
-- [ ] T057 [US5] Validar los 5 pasos de quickstart "Historia 5" y hacer commit
+- [X] T057 [US5] Validar los 5 pasos de quickstart "Historia 5" y hacer commit
   `feat: full HUD, game over screen and return to lobby (US5)`.
 
 **Checkpoint**: ciclo completo de partida.

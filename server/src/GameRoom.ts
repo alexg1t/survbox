@@ -78,6 +78,14 @@ export class GameRoom extends Room<{ state: GameState }> {
       this.state.waveTimer = WAVES.intermission;
     });
 
+    // FR-032: only the host takes everyone back to the lobby, where new players may join again.
+    this.onMessage('lobby', (client) => {
+      if (client.sessionId !== this.state.hostId || this.state.phase !== 'gameover') return;
+      this.resetWorld();
+      this.state.wave = 0;
+      this.state.phase = 'lobby';
+    });
+
     this.onMessage('debugUnlock', (client) => {
       if (process.env.NODE_ENV === 'production') return;
       const p = this.state.players.get(client.sessionId);

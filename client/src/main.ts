@@ -40,6 +40,7 @@ async function enter(join: () => Promise<Room<any, GameState>>) {
   room.onLeave(() => {
     game.scene.stop('game');
     room = null;
+    $('#scores').hidden = true;
     show('menu');
   });
 }
@@ -53,6 +54,7 @@ function onState(state: GameState) {
       show('lobby');
     } else if (phase === 'gameover') {
       show('gameover');
+      $('#gameover-wave').textContent = `Llegasteis a la oleada ${state.wave}`;
     } else {
       if (!game.scene.isActive('game')) game.scene.start('game', { room });
       show('hud');
@@ -63,11 +65,20 @@ function onState(state: GameState) {
     }
   }
   const isHost = state.hostId === room.sessionId;
+  const playing = phase === 'playing' || phase === 'intermission';
+  $('#scores').hidden = !playing;
+  if (playing || phase === 'gameover') {
+    const rows = scoreboard(state);
+    $('#scores').innerHTML = rows;
+    $('#gameover-scores').innerHTML = rows;
+    $('#back').hidden = !isHost;
+    $('#gameover-wait').hidden = isHost;
+  }
   if (phase === 'lobby') {
     $('#lobby-code').textContent = room.roomId;
     $('#lobby-players').innerHTML = [...state.players]
       .sort(([, a], [, b]) => a.joinOrder - b.joinOrder)
-      .map(([id, p]) => `<li><span class="swatch" style="background:${hex(PLAYER_COLORS[p.color])}"></span>${escape(p.name)}${id === state.hostId ? ' <span class="muted">(anfitrión)</span>' : ''}</li>`)
+      .map(([id, p]) => `<li>${swatch(p.color)}${escape(p.name)}${id === state.hostId ? ' <span class="muted">(anfitrión)</span>' : ''}</li>`)
       .join('');
     $('#start').hidden = !isHost;
     $('#lobby-wait').hidden = isHost;
@@ -82,6 +93,16 @@ function onState(state: GameState) {
     $('#hud-wave').textContent = `Oleada ${state.wave}`;
     $('#hud-code').textContent = `Sala ${room.roomId}`;
   }
+}
+
+const swatch = (color: number) => `<span class="swatch" style="background:${hex(PLAYER_COLORS[color])}"></span>`;
+
+// FR-033: every player's score, best first.
+function scoreboard(state: GameState): string {
+  return [...state.players.values()]
+    .sort((a, b) => b.score - a.score)
+    .map((p) => `<li>${swatch(p.color)}${escape(p.name)} · ${p.score}</li>`)
+    .join('');
 }
 
 function joinError(err: unknown): string {
@@ -104,6 +125,7 @@ $('#join').onclick = join;
 $('#name').onkeydown = (e) => e.key === 'Enter' && (code() ? join() : create());
 $('#code').onkeydown = (e) => e.key === 'Enter' && join();
 $('#start').onclick = () => room?.send('start');
+$('#back').onclick = () => room?.send('lobby');
 $('#copy').onclick = () => {
   const link = `${location.origin}/?room=${room?.roomId}`;
   // clipboard needs a secure context; plain-http LAN addresses fall back to a prompt
