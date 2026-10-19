@@ -13,6 +13,7 @@ type Img = Phaser.GameObjects.Image;
 export class GameScene extends Phaser.Scene {
   room!: Room<any, GameState>;
   private sprites = new Map<string, Img>();
+  private labels = new Map<string, Phaser.GameObjects.Text>();
   private me = { x: 0, y: 0, dir: 2 };
   private sent = { dx: 0, dy: 0, fire: false };
   private keys!: Record<string, Phaser.Input.Keyboard.Key>;
@@ -24,6 +25,7 @@ export class GameScene extends Phaser.Scene {
   init(data: { room: Room<any, GameState> }) {
     this.room = data.room;
     this.sprites.clear();
+    this.labels.clear();
   }
 
   create() {
@@ -91,6 +93,12 @@ export class GameScene extends Phaser.Scene {
       const local = id === this.room.sessionId;
       const s = this.sync(`p:${id}`, seen, local ? this.me.x : p.x, local ? this.me.y : p.y, !local);
       s.setTexture(`p${p.color}_d${local ? this.me.dir : p.dir}`).setVisible(p.alive);
+      let label = this.labels.get(`p:${id}`);
+      if (!label) {
+        label = this.add.text(0, 0, p.name, { fontSize: '10px', color: '#ffffff', stroke: '#000000', strokeThickness: 3 });
+        this.labels.set(`p:${id}`, label.setOrigin(0.5, 1).setDepth(1e6));
+      }
+      label.setPosition(s.x, s.y - CHAR_H + 4).setVisible(p.alive);
     }
     for (const [id, e] of state.enemies) {
       this.sync(`e:${id}`, seen, e.x, e.y, true).setTexture(`z_d${e.dir}`);
@@ -99,6 +107,8 @@ export class GameScene extends Phaser.Scene {
       if (!seen.has(key)) {
         s.destroy();
         this.sprites.delete(key);
+        this.labels.get(key)?.destroy();
+        this.labels.delete(key);
       }
     }
 

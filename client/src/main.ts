@@ -3,7 +3,7 @@ import type { GameState } from '@game/server/src/state.ts';
 import * as Phaser from 'phaser';
 import { hex, PLAYER_COLORS } from './art.ts';
 import { GameScene } from './GameScene.ts';
-import { $, show } from './ui.ts';
+import { $, show, toast } from './ui.ts';
 
 const client = new Client(`ws://${location.hostname}:2567`);
 
@@ -25,8 +25,7 @@ async function enter(join: () => Promise<Room<any, GameState>>) {
   try {
     room = await join();
   } catch (err) {
-    $('#menu-error').textContent = 'No se pudo conectar';
-    console.error(err);
+    $('#menu-error').textContent = joinError(err);
     return;
   }
   phase = '';
@@ -56,9 +55,9 @@ function onState(state: GameState) {
   const isHost = state.hostId === room.sessionId;
   if (phase === 'lobby') {
     $('#lobby-code').textContent = room.roomId;
-    $('#lobby-players').innerHTML = [...state.players.values()]
-      .sort((a, b) => a.joinOrder - b.joinOrder)
-      .map((p) => `<li><span class="swatch" style="background:${hex(PLAYER_COLORS[p.color])}"></span>${escape(p.name)}</li>`)
+    $('#lobby-players').innerHTML = [...state.players]
+      .sort(([, a], [, b]) => a.joinOrder - b.joinOrder)
+      .map(([id, p]) => `<li><span class="swatch" style="background:${hex(PLAYER_COLORS[p.color])}"></span>${escape(p.name)}${id === state.hostId ? ' <span class="muted">(anfitrión)</span>' : ''}</li>`)
       .join('');
     $('#start').hidden = !isHost;
     $('#lobby-wait').hidden = isHost;
@@ -69,10 +68,37 @@ function onState(state: GameState) {
   }
 }
 
+function joinError(err: unknown): string {
+  const msg = String((err as Error)?.message ?? err);
+  if (msg.includes('IN_PROGRESS')) return 'Partida en curso';
+  if (msg.includes('locked')) return 'Sala llena';
+  if (msg.includes('not found')) return 'Sala no encontrada';
+  return 'No se pudo conectar';
+}
+
 const escape = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 const name = () => $<HTMLInputElement>('#name').value;
+const code = () => $<HTMLInputElement>('#code').value.replace(/\s+/g, '').toUpperCase();
 
-$('#create').onclick = () => enter(() => client.create('game', { name: name() }));
+const create = () => enter(() => client.create('game', { name: name() }));
+const join = () => code() && enter(() => client.joinById(code(), { name: name() }));
+
+$('#create').onclick = create;
+$('#join').onclick = join;
+$('#name').onkeydown = (e) => e.key === 'Enter' && (code() ? join() : create());
+$('#code').onkeydown = (e) => e.key === 'Enter' && join();
 $('#start').onclick = () => room?.send('start');
+$('#copy').onclick = () => {
+  const link = `${location.origin}/?room=${room?.roomId}`;
+  // clipboard needs a secure context; plain-http LAN addresses fall back to a prompt
+  if (navigator.clipboard) navigator.clipboard.writeText(link).then(() => toast('Enlace copiado'));
+  else prompt('Copia el enlace', link);
+};
+
+const linked = new URLSearchParams(location.search).get('room');
+if (linked) {
+  $<HTMLInputElement>('#code').value = linked;
+  $('#name').focus();
+}
 
 show('menu');

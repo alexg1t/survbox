@@ -1,4 +1,4 @@
-import { type Client, Room } from '@colyseus/core';
+import { type Client, Room, ServerError } from '@colyseus/core';
 import {
   DIRS, ENEMIES, PATCH_MS, PLAYER, STARTING_AMMO, TICK_HZ, TILE, WAVES, WEAPONS, ZOMBIE,
   type Vec, buildFlowField, circlesOverlap, dirFrom, moveCircle, nextStep, parseMap, raycast, tileCenter, toTile,
@@ -54,6 +54,12 @@ export class GameRoom extends Room<{ state: GameState }> {
     });
   }
 
+  // Joining is only allowed from the lobby (FR-037). Full rooms are rejected by maxClients.
+  onAuth() {
+    if (this.state.phase !== 'lobby') throw new ServerError(4000, 'IN_PROGRESS');
+    return true;
+  }
+
   onJoin(client: Client, options?: { name?: unknown }) {
     const used = new Set([...this.state.players.values()].map((p) => p.color));
     const color = [0, 1, 2, 3].find((c) => !used.has(c)) ?? 0;
@@ -67,7 +73,15 @@ export class GameRoom extends Room<{ state: GameState }> {
   }
 
   onLeave(client: Client) {
-    this.state.players.delete(client.sessionId);
+    const s = this.state;
+    s.players.delete(client.sessionId);
+    if (s.hostId === client.sessionId) {
+      // FR-038: the oldest remaining player becomes host
+      let next = '';
+      let order = Infinity;
+      for (const [id, p] of s.players) if (p.joinOrder < order) { order = p.joinOrder; next = id; }
+      s.hostId = next;
+    }
   }
 
   private inGame() {

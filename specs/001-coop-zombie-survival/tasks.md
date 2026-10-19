@@ -278,32 +278,32 @@ anfitrión puede cambiar y los rechazos dan mensajes claros.
 
 **Independent Test**: [quickstart.md](./quickstart.md) "Historia 2", con 5 pestañas.
 
-- [ ] T030 [US2] En `server/src/GameRoom.ts`:
+- [X] T030 [US2] En `server/src/GameRoom.ts`:
   - `onAuth` lanza un error con mensaje `IN_PROGRESS` si `state.phase!=='lobby'`;
   - si sale el anfitrión, `onLeave` pasa `hostId` al jugador restante de menor `joinOrder`
     (FR-038);
   - se mantiene el `autoDispose` por defecto para que la sala se cierre al quedar vacía
     (FR-005).
-- [ ] T031 [P] [US2] Entrar por código o enlace en `client/src/main.ts`:
+- [X] T031 [P] [US2] Entrar por código o enlace en `client/src/main.ts`:
   - el input de código de `#menu` y "Entrar" llaman a
     `client.joinById(code.trim().toUpperCase(),{name})`;
   - al cargar con `?room=CODE`, rellena el código y pone el foco en el nombre, de forma que
     Enter entra.
-- [ ] T032 [US2] En `client/src/main.ts`, traducir los errores de entrada:
+- [X] T032 [US2] En `client/src/main.ts`, traducir los errores de entrada:
   - room id inválido → "Sala no encontrada";
   - sala bloqueada → "Sala llena";
   - `IN_PROGRESS` → "Partida en curso";
   - cualquier otro → "No se pudo conectar".
 
   El mensaje se muestra en `#menu`, que sigue visible.
-- [ ] T033 [P] [US2] Sala de espera en `client/src/ui.ts`:
+- [X] T033 [P] [US2] Sala de espera en `client/src/ui.ts`:
   - "Copiar enlace" hace `navigator.clipboard.writeText(location.origin+'/?room='+code)`;
   - la lista de jugadores muestra nombre, muestra de color y la marca "(anfitrión)";
   - quien no es anfitrión ve "Esperando al anfitrión" en lugar de "Empezar".
-- [ ] T034 [US2] En `client/src/GameScene.ts`, poner el nombre de cada jugador como etiqueta de
+- [X] T034 [US2] En `client/src/GameScene.ts`, poner el nombre de cada jugador como etiqueta de
   texto sobre la cabeza, siguiendo al sprite. Al salir un jugador, borrar su sprite y su
   etiqueta.
-- [ ] T035 [US2] Validar los 9 pasos de quickstart "Historia 2" y hacer commit
+- [X] T035 [US2] Validar los 9 pasos de quickstart "Historia 2" y hacer commit
   `feat: join rooms by code or link with host handover (US2)`.
 
 **Checkpoint**: 4 jugadores sincronizados, y la US1 sigue funcionando sola.
