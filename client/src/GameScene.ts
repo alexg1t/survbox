@@ -7,6 +7,7 @@ import { $ } from './ui.ts';
 
 const map = parseMap();
 const SMOOTH = 0.25;
+const SERVER_SETTLE_MS = 150; // 3 patches without the server moving our player
 
 type Img = Phaser.GameObjects.Image;
 
@@ -16,6 +17,8 @@ export class GameScene extends Phaser.Scene {
   private labels = new Map<string, Phaser.GameObjects.Text>();
   private me = { x: 0, y: 0, dir: 2 };
   private sent = { dx: 0, dy: 0, fire: false };
+  private lastServer = { x: 0, y: 0 };
+  private serverMovedAt = 0;
   private keys!: Record<string, Phaser.Input.Keyboard.Key>;
 
   constructor() {
@@ -74,7 +77,7 @@ export class GameScene extends Phaser.Scene {
     return !!p && p.kind !== MINE;
   };
 
-  update(_time: number, deltaMs: number) {
+  update(time: number, deltaMs: number) {
     const state = this.room.state;
     const dt = deltaMs / 1000;
     const k = this.keys;
@@ -90,12 +93,18 @@ export class GameScene extends Phaser.Scene {
     if (self?.alive) {
       moveCircle(map, this.blocked, this.me, dx, dy, PLAYER.speed, PLAYER.radius, dt);
       if (dx || dy) this.me.dir = (Math.round(Math.atan2(dy, dx) / (Math.PI / 4)) + 8) % 8;
-      // While moving the server copy lags by ~RTT, so only big errors snap; at rest we ease onto it.
+      // The server copy lags by ~RTT, so while it is still moving (we moving, or our stop not yet
+      // applied) only big errors snap. Once both are at rest we ease onto the authoritative spot;
+      // easing earlier pulls the player back toward a stale position.
       // ponytail: lerp correction, snapshot buffer if jitter
+      if (self.x !== this.lastServer.x || self.y !== this.lastServer.y) {
+        this.lastServer = { x: self.x, y: self.y };
+        this.serverMovedAt = time;
+      }
       const ex = self.x - this.me.x;
       const ey = self.y - this.me.y;
       if (Math.hypot(ex, ey) > 96) Object.assign(this.me, { x: self.x, y: self.y });
-      else if (!dx && !dy) {
+      else if (!dx && !dy && time - this.serverMovedAt > SERVER_SETTLE_MS) {
         this.me.x += ex * 0.2;
         this.me.y += ey * 0.2;
       }

@@ -125,8 +125,13 @@ const join = () => code() && enter(() => client.joinById(code(), { name: name() 
 
 $('#create').onclick = create;
 $('#join').onclick = join;
-$('#name').onkeydown = (e) => e.key === 'Enter' && (code() ? join() : create());
-$('#code').onkeydown = (e) => e.key === 'Enter' && join();
+// Block bodies on purpose: an `on*` handler that returns false cancels the keystroke.
+$('#name').onkeydown = (e) => {
+  if (e.key === 'Enter') code() ? join() : create();
+};
+$('#code').onkeydown = (e) => {
+  if (e.key === 'Enter') join();
+};
 $('#start').onclick = () => room?.send('start');
 $('#back').onclick = () => room?.send('lobby');
 $('#copy').onclick = () => {
