@@ -173,7 +173,7 @@ paredes. Al morir, la partida termina.
 
 ### Tests de la User Story 1
 
-- [ ] T019 [P] [US1] Escribir en `shared/test/flowfield.test.ts` tests que fallen y comprueben:
+- [X] T019 [P] [US1] Escribir en `shared/test/flowfield.test.ts` tests que fallen y comprueben:
   - las distancias crecen al alejarse de 2 orígenes;
   - una pared obliga a rodear, así que la distancia es mayor que la Manhattan;
   - no se cortan esquinas: no se toma una diagonal entre 2 paredes;
@@ -182,7 +182,7 @@ paredes. Al morir, la partida termina.
 
 ### Implementación de la User Story 1
 
-- [ ] T020 [US1] Crear `shared/src/flowfield.ts` y exportarlo desde `shared/src/index.ts`:
+- [X] T020 [US1] Crear `shared/src/flowfield.ts` y exportarlo desde `shared/src/index.ts`:
   - `buildFlowField(map, sources: {tx,ty}[], extraCost?: (tx,ty)=>number)`: Dijkstra
     multi-origen con 8 vecinos.
     - La diagonal cuesta 1,414.
@@ -194,7 +194,7 @@ paredes. Al morir, la partida termina.
 
   Usar un heap binario sobre array con el comentario
   `// ponytail: plain binary heap, fine for 1200 cells`. Debe hacer pasar T019.
-- [ ] T021 [US1] Ciclo de vida de la sala en `server/src/GameRoom.ts`:
+- [X] T021 [US1] Ciclo de vida de la sala en `server/src/GameRoom.ts`:
   - **`onCreate`**:
     - `this.roomId` = código aleatorio de 5 letras de `ABCDEFGHJKLMNPQRSTUVWXYZ`, con el
       comentario `// ponytail: no collision check, query matchMaker if deployed`;
@@ -207,13 +207,13 @@ paredes. Al morir, la partida termina.
     - si `hostId` está vacío, toma el sessionId del jugador.
   - **`onLeave`**: borra al jugador.
   - Mapa solo de servidor: `inputs: Map<sessionId,{dx,dy,fire,cooldown}>`.
-- [ ] T022 [US1] Mensajes en `server/src/GameRoom.ts`:
+- [X] T022 [US1] Mensajes en `server/src/GameRoom.ts`:
   - **`start`**: se ignora si el emisor no es `hostId` o si `phase!=='lobby'`. Resetea mundo y
     jugadores (hp 100, `alive`, posiciones en las `P`) y pone `phase='playing'`, `wave=1` y
     `toSpawn=12`. La US3 sustituye este valor provisional por `waveComposition`.
   - **`input`**: aplica "`dx` y `dy` se fuerzan a {-1, 0, 1} y `fire` a booleano. Se ignora si
     el jugador está muerto o si la fase no es `playing` ni `intermission`".
-- [ ] T023 [US1] Jugadores en `tick(dtMs)` de `server/src/GameRoom.ts`. Para cada jugador vivo:
+- [X] T023 [US1] Jugadores en `tick(dtMs)` de `server/src/GameRoom.ts`. Para cada jugador vivo:
   - mover con `moveCircle` según su input;
   - si se mueve, `dir = dirFrom(dx,dy)`;
   - disparo de pistola cuando `fire` y `cooldown<=0`:
@@ -221,7 +221,7 @@ paredes. Al morir, la partida termina.
     - aplicar el daño;
     - `broadcast('shot',{x1,y1,x2,y2,w})`;
     - `cooldown = 1/rate`.
-- [ ] T024 [US1] Zombis en `tick` de `server/src/GameRoom.ts`:
+- [X] T024 [US1] Zombis en `tick` de `server/src/GameRoom.ts`:
   - aparece un zombi cada `WAVES.spawnEvery` s mientras `toSpawn>0` y `enemies.size<maxAlive`,
     en las `S` por turnos, saltando las ocupadas por un jugador;
   - el campo de flujo se reconstruye cada 250 ms desde las casillas de los jugadores vivos;
@@ -232,13 +232,13 @@ paredes. Al morir, la partida termina.
   - un jugador con hp 0 pasa a `alive=false`;
   - los enemigos muertos se eliminan;
   - si todos los jugadores están muertos, `phase='gameover'`.
-- [ ] T025 [P] [US1] Crear `client/src/art.ts` con `makeTextures(scene)`, usando
+- [X] T025 [P] [US1] Crear `client/src/art.ts` con `makeTextures(scene)`, usando
   `Graphics.generateTexture` (research R10). Genera:
   - `floor` (casilla 32×32) y `wall` (cubo 32×48 con cara superior clara y frontal oscura);
   - personajes `p0..p3_d0..d7` (4 colores de jugador) y `z_d0..d7` (zombi verde). Cada uno es
     una caja de cuerpo en vista 3/4, una caja de cabeza y un brazo/arma orientado hacia la
     dirección d.
-- [ ] T026 [US1] Crear `client/src/GameScene.ts`:
+- [X] T026 [US1] Crear `client/src/GameScene.ts`:
   - **`create()`**: llama a `makeTextures`, pinta el mapa desde `parseMap(MAP)` (paredes con
     depth = y) y mantiene un `Map<id, Sprite>` para jugadores y enemigos.
   - **`update()`**, en cada frame:
@@ -246,7 +246,7 @@ paredes. Al morir, la partida termina.
     - fija la textura por tipo, color y dirección, y depth = y;
     - acerca las entidades remotas a la posición del servidor con factor 0,25.
   - La cámara sigue al jugador local.
-- [ ] T027 [US1] Input y predicción en `client/src/GameScene.ts`:
+- [X] T027 [US1] Input y predicción en `client/src/GameScene.ts`:
   - lee flechas, WASD y espacio, y envía `room.send('input',{dx,dy,fire})` solo cuando cambia el
     estado;
   - predice el movimiento propio con el mismo `moveCircle`;
@@ -254,7 +254,7 @@ paredes. Al morir, la partida termina.
     64 px, con el comentario `// ponytail: lerp correction, snapshot buffer if jitter`;
   - con el evento `shot`, dibuja una estela de 100 ms;
   - muestra el recordatorio de controles los primeros 10 s (FR-034).
-- [ ] T028 [US1] Flujo de pantallas en `client/src/main.ts` y `client/src/ui.ts`:
+- [X] T028 [US1] Flujo de pantallas en `client/src/main.ts` y `client/src/ui.ts`:
   - `#menu` tiene el input de nombre (`maxlength=12`) y "Crear sala", que llama a
     `client.create('game',{name})`;
   - `#lobby` muestra el código, la lista de jugadores y "Empezar". Ese botón solo es visible si
@@ -264,7 +264,7 @@ paredes. Al morir, la partida termina.
     - `playing|intermission` → arranca `GameScene` y muestra `#hud`;
     - `gameover` → `#gameover` con el texto "Fin de la partida".
   - El `#hud` mínimo muestra la vida y el código de sala.
-- [ ] T029 [US1] Validar los 6 pasos de quickstart "Historia 1", ejecutar `npm test` y hacer
+- [X] T029 [US1] Validar los 6 pasos de quickstart "Historia 1", ejecutar `npm test` y hacer
   commit `feat: playable solo room with pistol and chasing zombies (US1)`.
 
 **Checkpoint**: MVP jugable en solitario.
