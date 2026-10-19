@@ -90,14 +90,14 @@ export class GameScene extends Phaser.Scene {
     if (self?.alive) {
       moveCircle(map, this.blocked, this.me, dx, dy, PLAYER.speed, PLAYER.radius, dt);
       if (dx || dy) this.me.dir = (Math.round(Math.atan2(dy, dx) / (Math.PI / 4)) + 8) % 8;
+      // While moving the server copy lags by ~RTT, so only big errors snap; at rest we ease onto it.
       // ponytail: lerp correction, snapshot buffer if jitter
       const ex = self.x - this.me.x;
       const ey = self.y - this.me.y;
       if (Math.hypot(ex, ey) > 96) Object.assign(this.me, { x: self.x, y: self.y });
-      else {
-        const f = dx || dy ? 0.02 : 0.2;
-        this.me.x += ex * f;
-        this.me.y += ey * f;
+      else if (!dx && !dy) {
+        this.me.x += ex * 0.2;
+        this.me.y += ey * 0.2;
       }
     }
 

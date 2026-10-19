@@ -81,6 +81,7 @@ Abre el enlace con `?debug=1` para desbloquear todas las armas.
 
 - Con 4 pestañas y 60 enemigos, el contador de FPS de las DevTools marca 50 o más en la pestaña
   activa.
-- Con DevTools → Network → throttling personalizado de 150 ms:
+- Con `COLYSEUS_LATENCY=150 npm run dev` (latencia simulada en el servidor), o con DevTools →
+  Network → throttling personalizado de 150 ms:
   - el movimiento propio responde al instante;
   - los demás jugadores se mueven suaves, sin saltos.

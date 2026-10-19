@@ -484,16 +484,16 @@ a la sala controlada por el anfitrión.
 
 ## Phase 8: Polish & cross-cutting
 
-- [ ] T058 Ejecutar `npm run typecheck` y `npm test` y corregir todos los errores en todos los
+- [X] T058 Ejecutar `npm run typecheck` y `npm test` y corregir todos los errores en todos los
   workspaces.
-- [ ] T059 Pase de rendimiento (SC-003):
+- [X] T059 Pase de rendimiento (SC-003):
   - con `?debug=1` y 4 pestañas, llegar a 60 enemigos;
   - comprobar que el juego va a 50 fps o más;
   - si no llega, reutilizar los gráficos de estelas y explosiones (pool) en
     `client/src/GameScene.ts`.
-- [ ] T060 Pase de latencia (SC-004): con throttling de 150 ms en DevTools, ajustar los
+- [X] T060 Pase de latencia (SC-004): con throttling de 150 ms en DevTools, ajustar los
   factores de corrección y suavizado de `client/src/GameScene.ts`.
-- [ ] T061 Recorrer [quickstart.md](./quickstart.md) completo. Verificar que están todos los
+- [X] T061 Recorrer [quickstart.md](./quickstart.md) completo. Verificar que están todos los
   comentarios `ponytail:` de research R4, R7 y R8. Hacer commit `chore: polish and validate MVP`.
 
 ---

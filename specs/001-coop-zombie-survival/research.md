@@ -76,6 +76,8 @@ Fecha: 2026-10-18. Las versiones se comprobaron con `npm view` y las APIs con lo
   decenas de balas por tick y es una función pura fácil de testear.
 - **Alternativa**: balas como entidades en el estado. Se descarta por más tráfico, más código y
   ningún beneficio visible.
+- **Ajuste tras implementar**: con puntería en 8 direcciones, un rayo fino casi nunca acierta. El
+  radio de los enemigos se amplía 8 px para el hitscan (`BULLET_WIDTH` en `GameRoom.ts`).
 
 ## R6. Pathfinding de enemigos
 
@@ -100,8 +102,10 @@ Fecha: 2026-10-18. Las versiones se comprobaron con `npm view` y las APIs con lo
     disparo mantenido. El servidor guarda el último input de cada jugador y lo aplica en cada tick.
     El tick es de 30 Hz (`setSimulationInterval`) y el patch de 50 ms (`setPatchRate(50)`).
   - **Predicción local**: el cliente mueve su jugador con la misma función `moveCircle` de
-    `shared/` y corrige hacia la posición del servidor con un lerp de 20 % por frame. Si el error
-    supera 2 casillas, hace snap.
+    `shared/`. Mientras se mueve no corrige, porque la copia del servidor va ~RTT por detrás y
+    corregir frenaría el movimiento. Parado, corrige con un lerp del 20 % por frame. Si el error
+    supera 3 casillas (96 px), hace snap. Con 150 ms simulados (`COLYSEUS_LATENCY=150`), el
+    movimiento propio es inmediato y al parar converge en <0,5 s.
   - **Entidades remotas**: suavizado exponencial hacia la última posición recibida.
 - **Razón**: es el mínimo que cumple SC-004 (≤150 ms sin retraso perceptible) sin un búfer de
   snapshots ni reconciliación por secuencia.

@@ -47,8 +47,9 @@ dirección 0-7. La dirección 0 es este y el sentido es horario: 0=E, 1=SE, 2=S,
 | weapon | uint8 | índice del arma seleccionada (tabla de armas) |
 | ammo | array<int16> | una entrada por arma: `-1` = bloqueada, `0..n` = munición. La pistola usa `-2` = infinita |
 
-El input del jugador (`dx`, `dy`, `fire`) y su `cooldown` viven solo en el servidor, en un
-`Map<sessionId, …>` de la sala. No se sincronizan.
+El input del jugador (`dx`, `dy`, `fire`) y su `cooldown` son campos `.noSync()` del propio
+schema: viven solo en el servidor y no se sincronizan. Lo mismo aplica a los campos "solo en el
+servidor" de las demás entidades.
 
 ### Enemy
 
@@ -68,7 +69,8 @@ Solo en el servidor: `attackCooldown` y `fireCooldown`.
 | kind | uint8 | 0 = granada, 1 = bola de fuego |
 | x, y | float32 | |
 
-Solo en el servidor: `vx`, `vy`, `fuse` (granada), `ownerId` (puntos de la granada).
+Solo en el servidor: `vx`, `vy`, `life` (mecha de la granada o alcance restante de la bola de
+fuego, en segundos) y `ownerId` (puntos de la granada).
 
 ### Placeable
 
@@ -94,8 +96,8 @@ Solo en el servidor: `ownerId` (para atribuir muertes).
     coincide con el de desbloqueo de FR-024.
   - Campos: `name`, `kind` (`hitscan` \| `thrown` \| `placeable`), `damage`, `rate`, `range`,
     `pellets`, `spread`, `radius`, `ammo` (dotación), `unlockMultiplier`.
-- **ENEMIES**: tabla con `hp`, `speed`, `radius`, `meleeDamage`, `meleeRate` y `points`. Para el
-  diablo, además: `fireDamage`, `fireRate`, `fireRange` y `fireSpeed`.
+- **ENEMIES**: tabla con `hp`, `speed`, `radius`, `meleeDamage`, `meleeEvery` (segundos entre
+  golpes) y `points`. Para el diablo, además: `fireDamage`, `fireEvery`, `fireRange` y `fireSpeed`.
 - **PLAYER**, **COMBO**, **WAVES** y **DROPS**: constantes. Los valores están en la sección R12 de
   [research.md](./research.md).
 - **MAP**: array de strings, una fila por línea, con esta leyenda:
@@ -107,7 +109,8 @@ Solo en el servidor: `ownerId` (para atribuir muertes).
   | `P` | punto de inicio de jugador (≥4) |
   | `S` | punto de aparición de enemigos (≥6) |
 
-  `parseMap()` devuelve `{ w, h, solid: Uint8Array, playerSpawns, enemySpawns }`.
+  `parseMap()` devuelve `{ w, h, solid: Uint8Array, playerSpawns, enemySpawns }`. Los puntos son
+  casillas `{ tx, ty }`.
 
 ## Funciones puras de `shared/` (contrato interno)
 
@@ -155,6 +158,8 @@ Qué ocurre en cada transición:
 - **`weapon`**: se ignora si el arma está bloqueada (`ammo[i] === -1`). Se permite seleccionar
   armas con munición 0 (spec, Edge Cases).
 - **`start` y `lobby`**: se ignoran si el emisor no es `hostId` o si la fase no es la esperada.
-- **Colocar**: la casilla destino es la adyacente en la dirección `dir`. Debe ser suelo, sin
+- **Colocar**: la casilla destino es la que contiene el punto situado `radio + TILE` (44 px)
+  delante del jugador en la dirección `dir`, es decir, la primera casilla libre del cuerpo. Debe
+  ser suelo, sin
   colocable y sin jugador ni enemigo encima. Si no, no se coloca nada ni se consume munición
   (FR-013).
